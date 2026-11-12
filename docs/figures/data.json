@@ -1,0 +1,71 @@
+{
+  "about": "Every value plotted in docs/figures, copied from the research record and never recomputed. 'synthetic' means the generated MemBrain benchmark corpus (120 episodes, 360 queries, 33 clusters of lookalikes, MiniLM encoder, 5 seeds, cluster-BCa intervals at B = 10000). 'real' means the author's own Claude Code sessions, labelled by Haiku.",
+  "sources": {
+    "ksweep": "MemBrain research record, k-sweep of plain vector search and BM25 over k = 1..50 (2026-08-01), summarised in the MemBrain paper, Section 4",
+    "separation": "MemBrain paper, Table 3 (write-time separation strength against disambiguation, decorrelate mode) and its caption",
+    "veto": "MemBrain paper, Table 8 (retrieval arms on the 180-query stratified subsample)",
+    "free_arms": "MemBrain paper, Section 4 text (best separation cell and the lexical control), interval of plain vector from the k-sweep record",
+    "gate": "lesson-recall design record, read-side measurements of 2026-11-11 (320 sampled past prompts, labels by Haiku)",
+    "decision": "lesson-recall design record, write-decision log of the first backfill (2,135 judged pairs)"
+  },
+  "recall_vs_k": {
+    "data": "synthetic",
+    "source": "ksweep",
+    "arm": "plain_vector (MiniLM)",
+    "k": [1, 2, 3, 5, 10, 20, 50],
+    "recall_at_k": [0.6194, 0.8139, 0.8944, 0.9583, 1.0000, 1.0000, 1.0000],
+    "recall_ci": [[0.5255, 0.6814], [0.7348, 0.8816], [0.8285, 0.9454], [0.9221, 0.9815], [1.0000, 1.0000], [1.0000, 1.0000], [1.0000, 1.0000]],
+    "disambiguation": [0.6194, 0.6194, 0.6194, 0.6194, 0.6194, 0.6194, 0.6194],
+    "disambiguation_ci": [0.5273, 0.6812],
+    "bm25_note": "BM25 behaves the same: recall 0.9639 at k=5 and 1.0000 at k=10, disambiguation 0.6361 at every k"
+  },
+  "separation": {
+    "data": "synthetic",
+    "source": "separation",
+    "mode": "decorrelate",
+    "strength": [0, 0.02, 0.05, 0.1, 0.25, 0.5, 0.8],
+    "sibling_cosine": [0.824, 0.774, 0.704, 0.629, 0.521, 0.406, 0.290],
+    "disambiguation": [0.6194, 0.6083, 0.6278, 0.6056, 0.6000, 0.4806, 0.5111],
+    "pair_accuracy_m2": [0.8056, 0.8056, 0.8056, 0.8056, 0.8056, 0.8056, 0.8056],
+    "pair_accuracy_note": "Table 3 caption: two-item cluster accuracy is 0.8056 at all seven decorrelate strengths",
+    "control": 0.6194,
+    "control_ci": [0.5273, 0.6812],
+    "control_ci_source": "ksweep",
+    "best_gain_points": 0.83,
+    "bar_points": 5
+  },
+  "pickers": {
+    "data": "synthetic",
+    "rows": [
+      {"label": "Similarity (plain vector)", "group": "no model call, all 360 queries", "value": 0.6194, "ci": [0.5273, 0.6812], "source": "ksweep"},
+      {"label": "BM25", "group": "no model call, all 360 queries", "value": 0.6361, "ci": [0.5908, 0.6850], "source": "ksweep"},
+      {"label": "Best write-time separation", "group": "no model call, all 360 queries", "value": 0.6278, "ci": [0.5426, 0.6880], "source": "free_arms"},
+      {"label": "Similarity (control)", "group": "model calls, 180-query subsample", "value": 0.6000, "ci": [0.5107, 0.6852], "source": "veto"},
+      {"label": "Recollection veto", "group": "model calls, 180-query subsample", "value": 0.8833, "ci": [0.8214, 0.9272], "source": "veto"},
+      {"label": "llm_pick (one comparative call)", "group": "model calls, 180-query subsample", "value": 0.9444, "ci": [0.8918, 0.9752], "source": "veto"}
+    ],
+    "ceiling": {"label": "right memory in the top 10, all 360 queries", "value": 1.0000, "source": "ksweep"},
+    "veto_vs_llm_pick_points": {"value": -6.11, "ci": [-9.89, -3.08], "source": "veto"}
+  },
+  "gate": {
+    "data": "real",
+    "source": "gate",
+    "prompts": 320,
+    "rows": [
+      {"label": "No gate", "top_card_relevant": 0.371, "fires": "every prompt"},
+      {"label": "BM25 gate", "top_card_relevant": 0.510, "fires": "102 of 320 (31.9%)"},
+      {"label": "Encoder gate (shipped)", "top_card_relevant": 0.701, "fires": "97 of 320 (30.3%)"}
+    ],
+    "difference": {"value": 0.191, "ci": [0.086, 0.300], "method": "paired bootstrap 95% interval"},
+    "pair_auc": {"encoder": 0.793, "bm25": 0.676, "pairs": 906}
+  },
+  "decision": {
+    "data": "real",
+    "source": "decision",
+    "pairs": 2135,
+    "classes": ["INTERFERENCE", "DEFER", "DUPLICATE", "COINCIDENCE", "SUPERSESSION"],
+    "counts": [1787, 270, 64, 12, 2],
+    "interference_with_condition": 1036,
+    "supersessions_confirmed": 0
+  }
+}
