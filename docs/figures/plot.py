@@ -55,9 +55,9 @@ def recall_vs_k(d, t):
     ax.annotate(f"{rec[3]:.4f} at k=5", (5, rec[3]), (2.6, 0.985), color=t["ink2"], fontsize=8.5,
                 arrowprops={"arrowstyle": "-", "color": t["muted"], "lw": 0.8})
     ax.annotate(f"{rec[4]:.4f} from k=10", (10, 1.0), (13, 0.955), color=t["ink2"], fontsize=8.5)
-    ax.annotate(f"{d['disambiguation'][0]:.4f} at every k", (50, d["disambiguation"][-1]), (13, 0.565),
-                color=t["ink2"], fontsize=8.5)
-    ax.legend(loc="lower right", bbox_to_anchor=(1.0, 0.13))
+    ax.text(50, lo - 0.012, f"{d['disambiguation'][0]:.4f} at every k", ha="right", va="top",
+            color=t["ink2"], fontsize=8.5)
+    ax.legend(loc="center right", bbox_to_anchor=(1.0, 0.55))
     return fig
 
 
@@ -75,10 +75,10 @@ def separation(d, t):
            color=t["ink2"], fontsize=8)
     b.plot(s, d["pair_accuracy_m2"], marker="o", color=t["s2"], label="pairs of two lookalikes")
     b.plot(s, d["disambiguation"], marker="o", color=t["s1"], label="all queries")
-    b.set_ylim(0.4, 0.9)
+    b.set_ylim(0.4, 1.0)
     b.set_ylabel("disambiguation")
     b.set_title("(b) The ranking does not follow")
-    b.legend(loc="lower left")
+    b.legend(loc="upper right")
     for ax in (a, b):
         ax.set_xlabel("separation strength s")
     fig.tight_layout(w_pad=2.5)
@@ -96,7 +96,8 @@ def pickers(d, t):
         seen.add(r["group"])
         ax.errorbar(r["value"], y, xerr=[[r["value"] - r["ci"][0]], [r["ci"][1] - r["value"]]], fmt="o",
                     color=color[r["group"]], ecolor=color[r["group"]], elinewidth=1.5, capsize=0, label=lab)
-        ax.text(r["ci"][1] + 0.008, y, f"{r['value']:.4f}", va="center", color=t["ink2"], fontsize=8.5)
+        ax.text(r["value"], y + 0.22, f"{r['value']:.4f}", ha="center", va="bottom", color=t["ink2"],
+                fontsize=8.5)
     c = d["ceiling"]
     ax.axvline(c["value"], color=t["muted"], lw=1, ls=(0, (3, 2)))
     ax.text(c["value"] - 0.005, len(rows) - 0.45, "right memory\nin the top 10", ha="right", va="top",
@@ -104,10 +105,11 @@ def pickers(d, t):
     ax.set_yticks(range(len(rows)), [r["label"] for r in rows])
     ax.grid(axis="y", visible=False)
     ax.set_xlim(0.45, 1.03)
-    ax.set_ylim(-0.6, len(rows) - 0.3)
+    ax.set_ylim(-0.6, len(rows) - 0.1)
     ax.set_xlabel("disambiguation: right memory picked first (95% interval)")
     ax.set_title("Only a comparison closes the gap")
-    ax.legend(loc="lower right", bbox_to_anchor=(1.0, 0.0), fontsize=8.5)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1], loc="center right", bbox_to_anchor=(0.93, 0.62), fontsize=8.5)
     fig.tight_layout()
     return fig
 
@@ -123,11 +125,11 @@ def gate(d, t):
         ax.text(i, v + 0.015, f"{v:.3f}", ha="center", va="bottom", color=t["ink"], fontsize=9)
     ax.set_xticks(list(x), [f"{r['label']}\nfires: {r['fires']}" for r in rows])
     ax.grid(axis="x", visible=False)
-    ax.set_ylim(0, 0.85)
+    ax.set_ylim(0, 0.9)
     ax.set_ylabel("top card relevant, share of fires")
     diff = d["difference"]
-    ax.annotate("", (2, 0.735), (1, 0.735), arrowprops={"arrowstyle": "-", "color": t["muted"], "lw": 0.8})
-    ax.text(1.5, 0.75, f"+{diff['value']:.3f} [{diff['ci'][0]:.3f}, {diff['ci'][1]:.3f}]", ha="center",
+    ax.annotate("", (2, 0.80), (1, 0.80), arrowprops={"arrowstyle": "-", "color": t["muted"], "lw": 0.8})
+    ax.text(1.5, 0.81, f"+{diff['value']:.3f} [{diff['ci'][0]:.3f}, {diff['ci'][1]:.3f}]", ha="center",
             va="bottom", color=t["ink2"], fontsize=8.5)
     ax.set_title(f"Recall gate on {d['prompts']} real past prompts (labels by Haiku)")
     fig.tight_layout()
@@ -138,8 +140,8 @@ def decision(d, t):
     names, counts = d["classes"][::-1], d["counts"][::-1]
     fig, ax = plt.subplots(figsize=(7.2, 3.0))
     ax.barh(range(len(names)), counts, height=0.55, color=t["s1"])
-    notes = {"INTERFERENCE": f"  {d['interference_with_condition']:,} name a condition that tells them apart",
-             "SUPERSESSION": f"  {d['supersessions_confirmed']} confirmed by the second call"}
+    notes = {"INTERFERENCE": f" ({d['interference_with_condition']:,} name a condition that tells them apart)",
+             "SUPERSESSION": f" ({d['supersessions_confirmed']} confirmed by the second call)"}
     for i, (n, c) in enumerate(zip(names, counts)):
         ax.text(c + 15, i, f"{c:,}" + notes.get(n, ""), va="center", color=t["ink2"], fontsize=8.5)
     ax.set_yticks(range(len(names)), names)
