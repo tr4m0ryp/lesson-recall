@@ -26,6 +26,19 @@ plugin for MemBrain. MemBrain is also the name of the research paper behind it
 Said"); the plugin implements the part of MemBrain that survived those
 measurements.
 
+**Not interested in the details? Stop reading here.** Install the plugin and let
+Claude set it up for you. The repository ships a [SETUP.md](./SETUP.md) written
+for Claude, so it knows every step: it plans the work, asks before it spends any
+of your usage, and switches MemBrain on when it is done.
+
+```
+/plugin marketplace add tr4m0ryp/membrain-claude-plugin
+/plugin install membrain@membrain
+/membrain:setup
+```
+
+Everything below explains how it works and why.
+
 ## The problem
 
 Coding agents forget everything between sessions. You explain that the tests
