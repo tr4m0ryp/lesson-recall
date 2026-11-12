@@ -1,7 +1,7 @@
 {
   "name": "lesson-recall",
-  "version": "0.1.2",
-  "description": "Long-term memory for Claude Code: lessons from your past sessions, recalled per prompt behind a fitted gate. A different approach to RAG: instead of trusting top-k similarity, it decides at write time which memories compete, and stays silent unless one clearly fits.",
+  "version": "0.1.3",
+  "description": "MemBrain: long-term memory for Claude Code. Lessons from your past sessions, recalled per prompt behind a fitted gate. A different approach to RAG: instead of trusting top-k similarity, it decides at write time which memories compete, and stays silent unless one clearly fits.",
   "author": {"name": "Keygraph, Inc."},
   "homepage": "https://github.com/tr4m0ryp/lesson-recall",
   "repository": "https://github.com/tr4m0ryp/lesson-recall",
