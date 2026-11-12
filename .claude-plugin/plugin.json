@@ -1,0 +1,10 @@
+{
+  "name": "lesson-recall",
+  "version": "0.1.0",
+  "description": "Long-term memory for Claude Code: lessons from past sessions, written as cards in the background and recalled per prompt only when they clear a fitted gate.",
+  "author": {"name": "Keygraph, Inc."},
+  "homepage": "https://github.com/tr4m0ryp/lesson-recall",
+  "repository": "https://github.com/tr4m0ryp/lesson-recall",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "keywords": ["memory", "hooks", "recall", "lessons"]
+}
