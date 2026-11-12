@@ -13,6 +13,8 @@
 
 <p align="center"><sub>The hippocampal circuit (dentate gyrus, CA3, CA1) that MemBrain takes its ideas from. Santiago Ramon y Cajal, 1911, public domain.</sub></p>
 
+<p align="center"><strong>explanatory video coming soon</strong></p>
+
 A Claude Code plugin that learns from your past sessions. When you correct the
 agent, it writes the lesson down as a small card. When a later prompt needs that
 lesson, the card comes back. When nothing fits, it stays silent.
