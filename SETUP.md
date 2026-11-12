@@ -7,136 +7,35 @@ fails, stop and tell the user what failed.
 
 ## How it works, and why
 
-The brain is the design motivation here, not a claim that this plugin
-implements the brain. Where a block borrows only a name, it says so.
-Synthetic means a generated benchmark corpus; real means the author's own Claude Code sessions.
+The full explanation, with the math and the plots, is in the README section
+[How it works, and why](./README.md#how-it-works-and-why). Read it there if the
+user wants depth. The short version, for explaining it in a few sentences:
 
-**Standard retrieval (RAG).** Score every stored memory $`d_i`$ against the
-question $`q`$ with an encoder $`e`$, keep the $`k`$ best, and paste them in:
-
-```math
-s_i = \cos\big(e(q), e(d_i)\big), \qquad C(q) = \operatorname{top-}k_i\; s_i, \qquad \text{answer} = \mathrm{LLM}\big(q + C(q)\big)
-```
-
-In words: store everything, fetch the k most similar, and hope the right one wins.
-
-**The problem we measured.** Two different probabilities hide in that line:
-P(right memory is in the top k) and P(right memory wins among its lookalikes).
-On a synthetic corpus (120 episodes, 360 queries, 33 clusters of lookalikes,
-plain vector search with MiniLM), the first is 0.958 at k=5 and reaches 1.0000
-at k=10. The second is 0.619 and does not move with k (0.6194 plain, 0.6361
-BM25, at every k). A larger k cannot fix this. The loss is competition between
-similar memories, so the fix belongs in the write path. This was measured on a
-synthetic corpus, not on real sessions.
-
-So we looked at how human memory handles this. One block per idea.
-
-**1. Store lessons, not transcripts.** The brain keeps what an episode taught,
-not a recording of it. A background pass cuts each session into units and one
-Haiku call per unit writes at most 2 cards, each a referent (what it is about),
-a lesson (hedges kept) and a trigger (the request that should recall it). The
-correction to the gist idea: summaries invent (5.02% invented-belief rate in
-the research), so every card carries a quote from the session and is dropped
-unless that quote is found verbatim:
-
-```math
-\text{keep}(c) = \mathbf{1}\big[\,\text{quote}(c) \subseteq \text{unit}(c)\,\big]
-```
-
-On real sessions 8 of 478 proposed cards failed this check (1.7%).
-
-**An idea that did not hold: surprise as a filter.** The plan was to read only
-surprising stretches (a user correction, an interrupt, a burst of tool errors).
-On real sessions, flagged episodes held a lesson in 149 of 281 (53.0%) and calm
-spans in 32 of 60 (53.3%). Surprise now decides where to cut; every stretch is read.
-
-**2. Separate lookalikes at write time.** The dentate gyrus gives two similar
-inputs codes that sit further apart than the inputs did (pattern separation).
-The plugin separates with a decision instead of geometry. A new card meets its
-up to 5 nearest active cards (BM25, at least 3 shared terms), and Haiku answers
-two bits per pair: same referent $`\rho`$ and same value $`\nu`$:
-
-```math
-\text{class}(\rho,\nu) = \begin{cases} \text{DUPLICATE} & (1,1) \\ \text{SUPERSESSION} & (1,0) \\ \text{COINCIDENCE} & (0,1) \\ \text{INTERFERENCE} & (0,0) \\ \text{DEFER} & \text{either bit unsure} \end{cases}
-```
-
-INTERFERENCE keeps both cards and links them when the judge names the
-condition that tells them apart; recall then shows "not to be confused with".
-On 2,135 real judged pairs: 1,787 INTERFERENCE (1,036 with a named condition),
-270 DEFER, 64 DUPLICATE, 12 COINCIDENCE, 2 SUPERSESSION. The classes are the Haiku judge's labels.
-
-**2b. Moving the vectors apart: tried, not shipped.** The literal version of
-pattern separation moves stored vectors apart at write time. We tried a
-symmetric transform on frozen MiniLM vectors (synthetic corpus): 0 of 14
-configurations cleared the bar, the best gained +0.83 points against a 5-point
-bar. Theorem 1 says why. For two competitors (m=2), a symmetric write-time
-transform $`T`$ with a normaliser shared across the pair cannot change which
-one wins:
-
-```math
-\arg\max_{i \in \{1,2\}} \cos\big(e(q), T(d_i)\big) = \arg\max_{i \in \{1,2\}} \cos\big(e(q), d_i\big)
-```
-
-Disambiguation stayed at 0.8056 at every strength. The result is closed only
-inside its premises: symmetric push, shared normaliser, same dimension, m=2.
-The brain's version is directional: it moves the NEW memory away from its
-stored neighbours. That asymmetric variant sits outside the theorem and was
-never properly tested (one attempt fell from 0.806 to 0.694 at m=2). It is not
-in this plugin.
-
-**3. Update instead of piling up.** In reconsolidation a recalled memory that
-meets a mismatch is updated, not duplicated. A SUPERSESSION retires the older
-card only after a second Haiku call confirms that the newer one makes it
-obsolete; the old card is marked superseded, never deleted, and `restore`
-undoes it. A DUPLICATE raises the old card's count and keeps the new wording.
-The count is shown ("seen 3x") but does not change ranking. On real sessions
-both proposed supersessions failed the confirming call: zero cards retired.
-
-**4. Recall by cue and by place.** A memory comes back when the cue matches how
-it was stored (encoding specificity) and more easily in the same context. BM25
-scores the trigger and referent twice and the lesson once; the encoder embeds
-the whole card (`referent. trigger lesson`). Project cards fire inside their
-project on any device (and in a parent folder at least two levels below home),
-general cards everywhere:
-
-```math
-\text{pool}(q) = \{\, c : \text{scope}(c) = \text{general} \;\lor\; \text{project}(c) \subseteq \text{cwd}(q) \,\}
-```
-
-**5. Stay silent by default.** Most prompts should recall nothing. BM25 takes
-the top 3 in-scope cards; the encoder runs only when the best BM25 score clears
-$`\theta_{\text{pre}}`$ with 2 or more matched terms; card $`i`$ is shown only if
-
-```math
-\cos\big(e(q), e(c_i)\big) \ge \theta, \qquad \theta = \text{the quantile of replayed past prompts at which a share } \rho = 0.33 \text{ fire}
-```
-
-Each prompt's own session is held out of the replay, $`\theta_{\text{pre}}`$
-lets 70% of prompts through, and both refit when the pool has grown by 15%.
-On 320 real past prompts labelled by Haiku, the top card is relevant in 0.701
-of fires (30.3% fire) against 0.510 for a BM25-only gate (31.9% fire), and
-0.371 with no gate. The encoder and card text were chosen among 18 variants on the same 320 prompts (the lowest scored 0.608); labels come from Haiku; the encoder adds about 0.75 s on the prompts that pass the pre-gate.
-
-**6. Let a comparison choose.** The least exciting idea is the one that worked
-best: one LLM call that compares the candidates (llm_pick):
-
-```math
-\text{pick} = \mathrm{LLM}\big(q, \text{top-}k\big) \qquad \text{versus} \qquad \text{pick} = \arg\max_i s_i
-```
-
-On the synthetic corpus it reached 0.9444 [0.8918, 0.9752] against 0.6194,
-closing 86.1% of the headroom. It was measured at k=5 only, on a 180-query
-subsample, and costs about $0.014 per query as a dedicated call, which is why
-it stayed a baseline. The brain-inspired rival, recollection veto
-(recall-to-reject), lost: 0.8833 against 0.9444, paired difference -6.11
-[-9.89, -3.08] (lost a comparison, not proven closed). The plugin makes no
-extra call: the cards go to the session model, which is already reading the
-prompt, marked as observations that may not apply. The 0.9444 was measured with a dedicated call at k=5.
-
-**Side by side.** RAG takes the argmax over everything stored, at read time.
-This plugin decides at write time what a memory is and which memories it
-competes with; at read time similarity finds the candidates, a comparison
-chooses among them, and silence is allowed.
+- **The problem.** Standard retrieval (RAG) sums over the k most similar memories.
+  On a synthetic benchmark the right memory is in the top 10 every time
+  (recall 1.0000 at k=10) but ranked first only 0.6194 of the time, at every k.
+  The loss is competition between lookalike memories, so the fix belongs in the
+  write path. This was measured on a synthetic corpus, not on real sessions.
+- **Lessons, not transcripts.** One Haiku call per unit writes at most 2 cards;
+  a card is dropped unless its quote is found verbatim (8 of 478 dropped, 1.7%).
+- **A write decision for lookalikes.** A new card meets its up to 5 nearest
+  cards; two bits (same referent, same value) give DUPLICATE, SUPERSESSION,
+  COINCIDENCE, INTERFERENCE or DEFER. Nothing is merged or deleted.
+- **Supersession needs a second confirming call.** On real sessions both
+  proposed supersessions failed it: zero cards retired.
+- **Recall by cue and scope, silent by default.** BM25 (trigger and referent
+  count twice) shortlists 3 in-scope cards; a local encoder gate shows a card
+  only above a threshold fitted so that a share 0.33 of the user's own past
+  prompts would fire. Top card relevant in 0.701 of fires against 0.510 for a
+  BM25-only gate (320 real prompts, labels by Haiku, gate
+  chosen among 18 variants on them).
+- **The session model picks.** One comparative LLM call picked the right memory
+  0.9444 of the time against 0.6194 by similarity (synthetic, k=5, 180-query
+  subsample). The plugin makes no extra call: the session model, which already reads the prompt, makes the pick.
+- **What failed.** Moving stored vectors apart symmetrically cannot reorder a
+  pair (proven inside its premises; 0 of 14 configurations cleared the bar),
+  surprise did not select lessons (53.0% against 53.3%), and the recollection
+  veto lost to the comparative call (0.8833 against 0.9444).
 
 ## What leaves the machine
 
