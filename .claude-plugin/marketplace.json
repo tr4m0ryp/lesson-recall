@@ -1,6 +1,11 @@
 {
   "name": "lesson-recall",
-  "owner": {"name": "Keygraph, Inc."},
+  "owner": {
+    "name": "Keygraph, Inc."
+  },
+  "metadata": {
+    "description": "Lesson recall: long-term memory for Claude Code, learned from your own past sessions."
+  },
   "plugins": [
     {
       "name": "lesson-recall",
