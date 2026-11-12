@@ -1,4 +1,4 @@
-# lesson-recall: long-term memory for Claude Code
+# lesson-recall: MemBrain, long-term memory for Claude Code
 
 A Claude Code plugin that learns from your past sessions. When you correct the
 agent, it writes the lesson down as a small card. When a later prompt needs that
@@ -6,6 +6,12 @@ lesson, the card comes back. When nothing fits, it stays silent.
 
 A different approach to RAG: instead of trusting top-k similarity, it decides
 at write time which memories compete, and stays silent unless one clearly fits.
+
+The approach is called **MemBrain**, and lesson-recall is the Claude Code plugin
+that implements it. MemBrain is also the name of the research paper behind it
+("MemBrain: An Agent Memory Built on the Brain, and What the Measurements
+Said"); the plugin implements the part of MemBrain that survived those
+measurements.
 
 ## The problem
 
@@ -22,13 +28,13 @@ down. **The work is in the write path**, not in the retriever.
 
 ## The idea
 
-Decide at write time what a memory is and which memories it competes with.
-At read time, stay silent unless a card clearly fits, and let the model that is
-already reading the prompt do the picking.
+MemBrain in three lines. Decide at write time what a memory is and which
+memories it competes with. At read time, stay silent unless a card clearly fits,
+and let the model that is already reading the prompt do the picking.
 
 ```
 session transcript
-  -> cut into units          (every stretch is read; corrections only decide the cuts)
+  -> cut into units          (every stretch is read; surprises only decide the cuts)
   -> one Haiku call per unit (0 to 2 lesson cards, each tied to a verbatim quote)
   -> write decision          (new card against its nearest cards: duplicate,
                               supersedes, coincides, or interferes and gets linked)
@@ -60,10 +66,12 @@ Two devices never write the same file, so a sync can lose a race but never confl
 
 ## How it works, and why
 
-The brain is the design motivation here, not a claim that this plugin
-implements the brain. Where a block borrows only a name, it says so.
-Synthetic means the MemBrain benchmark corpus (120 episodes, 360 queries, 33
-clusters of lookalike memories, MiniLM encoder, 5 seeds). Real means the author's own Claude Code sessions. Every number is copied from the research record;
+This section walks through MemBrain from the RAG formula up. The brain is the
+design motivation here, not a claim that MemBrain implements the brain. Where a
+block borrows only a name, it says so. Synthetic means the MemBrain benchmark
+corpus (120 episodes, 360 queries, 33 clusters of lookalike memories, MiniLM
+encoder, 5 seeds). Real means the author's own Claude Code sessions. Every number
+is copied from the research record;
 [`docs/figures/data.json`](./docs/figures/data.json) lists the source of each
 plotted value.
 
@@ -92,7 +100,7 @@ p_\eta(z \mid x) \;\propto\; \exp\!\left(d(z)^\top q(x)\right), \qquad d(z) = \m
 - $`p_\theta(y_i \mid x, z, y_{1:i-1})`$ is the generator: the next token given the input, one passage and the tokens so far.
 
 In words: store everything, fetch the k most similar, and let each one vote
-with a weight equal to its similarity.
+with a weight that grows exponentially with its similarity.
 
 ### The problem sits in top-k
 
@@ -108,10 +116,13 @@ Take the right memory $`z^\ast`$ and a lookalike $`z'`$. Their relative weight i
 \frac{p_\eta(z^\ast \mid x)}{p_\eta(z' \mid x)} \;=\; \exp\!\left(\big(d(z^\ast) - d(z')\big)^\top q(x)\right)
 ```
 
-When the two embeddings are nearly equal the ratio is close to 1, and the
-answer is driven by whichever lookalike happens to score higher. The ratio does
-not contain $`k`$. Raising k adds passages with lower scores, which are more
-lookalikes, but it never changes how $`z^\ast`$ stands against $`z'`$. So two
+When the two embeddings are nearly equal the ratio is close to 1: the sum gives
+the wrong lookalike about as much weight as the right memory, and a reader that
+follows the top-ranked memory follows whichever happens to score higher. The
+ratio does not contain $`k`$. Raising k adds passages with lower scores, first
+more lookalikes and then unrelated memories (at k = 10 only 0.4000 of the
+retrieved competitors are lookalikes), but it never changes how $`z^\ast`$
+stands against $`z'`$. So two
 quantities hide in the formula, and only one of them depends on k:
 
 ```math
@@ -122,7 +133,8 @@ $`R@k`$ (recall) asks whether the right memory was fetched. $`A`$
 (disambiguation) asks whether it wins against its lookalikes. On the synthetic
 corpus with plain vector search, $`R@5 = 0.9583`$ and $`R@k = 1.0000`$ from
 $`k = 10`$ on, while $`A = 0.6194`$ at every k from 1 to 50 (BM25: 0.6361 at
-every k). Every query that fails at k = 1 fails at every larger k.
+every k). The ranking is decided at k = 1: no query that is not ranked first
+there is ranked first at any larger k.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/png/recall-vs-k-dark.png">
@@ -132,12 +144,14 @@ every k). Every query that fails at k = 1 fails at every larger k.
 *Synthetic benchmark, 360 queries: a larger k finds the right memory every
 time from k = 10 and never ranks it first more often. Shaded: 95% intervals.*
 
-The loss is competition between similar memories, not retrieval. A better
-retriever or a larger k cannot fix it, so the fix belongs in the write path:
+The loss is competition between similar memories, not retrieval. A larger k
+cannot fix it, and every arm without a model call stayed at least 25 points
+below the share of queries whose right memory was already in the top five. So
+MemBrain puts the fix in the write path:
 decide what a memory is, and which memories it competes with, before anything
-is retrieved. So we looked at how human memory handles this. One block per
-idea: the brain mechanism, the math we took from it, what the plugin does, and
-its number.
+is retrieved. To get there we looked at how human memory handles this. One
+block per idea: the brain mechanism, the math we took from it, what MemBrain
+does, and its number.
 
 ### 1. Store lessons, not transcripts
 
@@ -146,12 +160,13 @@ its number.
 **Math.** A background pass cuts each session into units and one Haiku call
 per unit proposes at most 2 cards, each a referent (what it is about), a lesson
 (hedges kept) and a trigger (the request that should recall it). Gists invent:
-the research measured a 5.02% invented-belief rate in stored assertions. So every
-card carries a quote and is kept only if the quote is found verbatim in one of
-the unit's turns, after lowercasing and collapsing whitespace:
+in the research, 5.02% of stored assertions had no support in their source
+(1.37% strict fabrication). So every card carries a quote and is kept only if
+the quote is found verbatim in one of the turns Haiku was shown, after
+lowercasing and collapsing whitespace:
 
 ```math
-\mathrm{keep}(c) = \mathbf{1}\Big[\, |\mathrm{norm}(\mathrm{quote}_c)| \ge 12 \;\land\; \exists\, t \in \mathrm{unit}(c) : \mathrm{norm}(\mathrm{quote}_c) \subseteq \mathrm{norm}(t) \,\Big]
+\mathrm{keep}(c) = \mathbf{1}\Big[\, |\mathrm{norm}(\mathrm{quote}_c)| \ge 12 \;\land\; \exists\, t \in \mathrm{shown}(c) : \mathrm{norm}(\mathrm{quote}_c) \subseteq \mathrm{norm}(t) \,\Big]
 ```
 
 **Number.** On real sessions 8 of 478 proposed cards failed this check (1.7%).
@@ -168,9 +183,9 @@ read.
 **Brain.** The dentate gyrus gives two similar inputs codes that sit further
 apart than the inputs did (pattern separation).
 
-**Math.** The plugin separates with a decision instead of geometry. A new card
-$`c`$ meets its neighbours: the up to 5 active cards with the highest BM25
-score against it that share at least 3 distinct terms with it. For each pair
+**Math.** MemBrain separates with a decision instead of geometry. A new card
+$`c`$ meets its neighbours: of the 5 active cards with the highest BM25 score
+against it, those that share at least 3 distinct terms with it. For each pair
 Haiku answers two bits, same referent $`\rho`$ and same value $`\nu`$, and the
 pair of bits picks the class:
 
@@ -183,8 +198,9 @@ pair of bits picks the class:
 | either unsure | | DEFER | the new card is added, nothing else changes |
 
 At recall an interfering card shows its closest linked neighbour as "not to be
-confused with ...; condition". Nothing is merged or deleted: the store is an
-append-only event log.
+confused with ...; condition", when the pair's BM25 score clears `link_score`,
+which `calibrate` sets so that half of the stored links qualify. Nothing is
+merged or deleted: the store is an append-only event log.
 
 **Number.** On 2,135 real judged pairs: 1,787 INTERFERENCE (1,036 with a named
 condition), 270 DEFER, 64 DUPLICATE, 12 COINCIDENCE, 2 SUPERSESSION. The classes are the Haiku judge's labels.
@@ -199,8 +215,9 @@ both stay, contradictions are rare.*
 
 **2b. Moving the vectors apart: tried, failed, closed inside its premises.**
 The literal version of pattern separation moves stored vectors apart at write
-time. We pushed each colliding pair apart symmetrically on frozen MiniLM
-vectors. Theorem 1 of the MemBrain paper says why that cannot work for a pair.
+time. We pushed colliding vectors apart on frozen MiniLM vectors, in a
+symmetric mode (decorrelate) and in a mode that expands them into a wider
+sparse space. Theorem 1 of the MemBrain paper says why that cannot work for a pair.
 Push stored vectors $`v_i, v_j`$ along half their difference
 $`u = (v_i - v_j)/2`$ with strength $`s`$ and one shared normaliser $`Z`$:
 
@@ -208,28 +225,28 @@ $`u = (v_i - v_j)/2`$ with strength $`s`$ and one shared normaliser $`Z`$:
 v_i' = \frac{v_i + s\,u}{Z}, \qquad v_j' = \frac{v_j - s\,u}{Z} \quad\Longrightarrow\quad q^\top v_i' - q^\top v_j' = \frac{1+s}{Z}\left(q^\top v_i - q^\top v_j\right)
 ```
 
-Proof sketch: subtract the two lines, $`q^\top(v_i' - v_j') = \big(q^\top(v_i - v_j) + 2s\,q^\top u\big)/Z`$,
-and $`2u = v_i - v_j`$ turns the bracket into $`(1+s)\,q^\top(v_i - v_j)`$.
-Since $`(1+s)/Z > 0`$, the push widens the margin for every query $`q`$ and
-never changes which of the two wins. The data agreed: on pairs of two
-lookalikes, disambiguation stayed at 0.8056 at all seven strengths. The
-transform did fire (sibling cosine fell from 0.824 to 0.290), and 0 of 14
-configurations cleared the bar; the best gained +0.83 points against a 5-point
-bar (synthetic). The result is proven closed only inside its premises:
-symmetric push, shared normaliser, same dimension, two competitors. The
-brain's version is directional: it moves the new memory away from its stored
-neighbours. That asymmetric variant sits outside the theorem and was never
-properly tested (one attempt fell from 0.806 to 0.694 on pairs). It is not in
-this plugin.
+Proof sketch: subtract the two lines,
+$`q^\top(v_i' - v_j') = \big(q^\top(v_i - v_j) + 2s\,q^\top u\big)/Z`$, and $`2u = v_i - v_j`$ turns the bracket into
+$`(1+s)\,q^\top(v_i - v_j)`$. Since $`(1+s)/Z > 0`$, the push widens the margin
+for every query $`q`$ and never changes which of the two wins. The data agreed:
+on pairs of two lookalikes, the symmetric mode left disambiguation at 0.8056 at
+all seven strengths. The transform did fire (sibling cosine fell from 0.824 to
+0.290), and 0 of 14 configurations in either mode cleared the bar; the best
+gained +0.83 points against a 5-point bar (synthetic). The result is proven
+closed only inside its premises: symmetric push, shared normaliser, same
+dimension, two competitors. The brain's version is directional: it moves the new
+memory away from its stored neighbours. That asymmetric variant sits outside the
+theorem and was never properly tested (one attempt fell from 0.806 to 0.694 on
+pairs). It is not in MemBrain as shipped.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/png/separation-dark.png">
   <img alt="Separation strength moves the vectors apart but not the ranking" src="docs/figures/png/separation-light.png" width="90%">
 </picture>
 
-*Synthetic benchmark: the push separates the vectors (a) and leaves the
-ranking where it was (b); pair accuracy is flat at 0.8056, Theorem 1 seen in
-data. Strength was selected on the same corpus, which favours the mechanism.*
+*Synthetic benchmark, symmetric mode: the push separates the vectors (a) and
+leaves the ranking where it was (b); pair accuracy is flat at 0.8056, Theorem 1
+seen in data. Strength was selected on the same corpus, which favours the mechanism.*
 
 ### 3. Update instead of piling up
 
@@ -247,8 +264,9 @@ card $`n`$ ordered by timestamp:
 where $`\mathrm{confirm}`$ is a second Haiku call that answers whether the
 newer card makes every part of the older one obsolete, and defaults to no. An
 unconfirmed supersession becomes DEFER. A retired card is marked superseded,
-never deleted, and `restore` undoes it. A DUPLICATE raises the old card's count,
-shown as "seen 3x"; the count does not change ranking.
+never deleted; the event log has a restore operation that brings it back, but
+no command exposes it yet. A DUPLICATE raises the old card's count, shown as
+"seen 3x"; the count does not change ranking.
 
 **Number.** On real sessions both proposed supersessions failed the confirming
 call: zero cards retired.
@@ -262,24 +280,28 @@ call: zero cards retired.
 characters (character pairs in scripts written without spaces), dropping stop
 words and one-letter terms, and trimming a few English suffixes. The stop words
 are learned from your own prompts by `cli.py tune`: every term found in at least
-10% of them. Before that, a built-in English and Dutch list applies. The trigger and referent are the retrieval key, so a card's term
-counts are $`f(t, c) = 2 f_{\mathrm{key}}(t, c) + f_{\mathrm{lesson}}(t, c)`$.
-Each distinct prompt term counts once in the BM25 score:
+10% of them. Before that, a built-in English and Dutch list applies. The trigger
+and referent are the retrieval key, so a card's term counts are
+$`f(t, c) = 2 f_{\mathrm{key}}(t, c) + f_{\mathrm{lesson}}(t, c)`$. Each distinct term of the
+prompt's first 2,000 characters counts once in the BM25 score:
 
 ```math
 \mathrm{BM25}(q, c) = \sum_{t \,\in\, T(q)} \mathrm{IDF}(t)\,\frac{f(t,c)\,(k_1 + 1)}{f(t,c) + k_1\left(1 - b + b\,\dfrac{|c|}{\overline{|c|}}\right)}, \qquad \mathrm{IDF}(t) = \ln\!\left(1 + \frac{n - n_t + 0.5}{n_t + 0.5}\right)
 ```
 
 with $`k_1 = 1.2`$, $`b = 0.75`$, $`T(q)`$ the set of prompt terms,
-$`|c|`$ the card's term count, $`\overline{|c|}`$ the mean over the pool,
-$`n`$ the pool size and $`n_t`$ the number of cards containing $`t`$. Only
-cards in scope enter the pool: general cards everywhere, project cards inside
-their project on any device (and in a parent folder at least two levels below
-home):
+$`|c|`$ the card's weighted term count, $`\overline{|c|}`$ the mean over the pool,
+$`n`$ the pool size and $`n_t`$ the number of cards containing $`t`$. The
+pool holds the active cards in scope that this session has not been shown yet:
+general cards everywhere, project cards inside their project on any device, or
+in a parent folder of the project at least two levels below home:
 
 ```math
-\mathrm{pool}(q) = \{\, c : \mathrm{scope}(c) = \mathrm{general} \;\lor\; \mathrm{project}(c) \subseteq \mathrm{cwd}(q) \,\}
+\mathrm{pool}(q) = \{\, c \text{ active, not yet shown in this session} : \mathrm{scope}(c) = \mathrm{general} \;\lor\; \mathrm{cwd}(q) \subseteq \mathrm{project}(c) \;\lor\; \big(\mathrm{project}(c) \subseteq \mathrm{cwd}(q) \land \mathrm{depth}(\mathrm{cwd}(q)) \ge 2\big) \,\}
 ```
+
+Here $`a \subseteq b`$ means folder $`a`$ lies inside folder $`b`$, and depth
+is counted from the home folder.
 
 The encoder sees the whole card as `referent. trigger lesson`.
 
@@ -299,7 +321,7 @@ at least one card is shown:
 \mathrm{show}(c_i) = \mathbf{1}\big[\, S_1(q) \ge \theta_{\mathrm{pre}} \;\land\; m_1(q) \ge 2 \;\land\; e(q)^\top e(c_i) \ge \theta \,\big]
 ```
 
-Both thresholds are fitted, not chosen. The plugin replays the user's own
+Both thresholds are fitted, not chosen. MemBrain replays the user's own
 $`N`$ past prompts, each with the cards from its own session held out.
 $`\theta_{\mathrm{pre}}`$ is the BM25 score that lets a share 0.70 of them
 through. With $`M_j`$ the best shortlist cosine of replayed prompt $`j`$
@@ -325,11 +347,11 @@ same 320 prompts (the weakest scored 0.608).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/png/gate-dark.png">
-  <img alt="Top-card precision of the recall gate on 320 real past prompts" src="docs/figures/png/gate-light.png" width="90%">
+  <img alt="Top-card precision of the MemBrain gate against a BM25 gate on 320 real past prompts" src="docs/figures/png/gate-light.png" width="90%">
 </picture>
 
 *Real sessions, 320 past prompts, labels by Haiku: at nearly the same firing
-rate the encoder gate shows a relevant top card 7 times in 10, the BM25 gate 5.
+rate the MemBrain gate shows a relevant top card 7 times in 10, the BM25 gate 5.
 Gate chosen among 18 variants on these prompts.*
 
 ### 6. Let a comparison choose
@@ -348,7 +370,8 @@ candidates together:
 
 Progress is measured as the share of the available headroom closed,
 $`H = (A - A_{\mathrm{ctrl}}) / (R - A_{\mathrm{ctrl}})`$, against the
-saturated recall $`R = 1.0000`$.
+saturated recall $`R = 1.0000`$. That recall was measured on all 360 queries and
+the arms on the 180-query subsample, so pairing them is a stated assumption.
 
 **Number.** The least exciting idea worked best. llm_pick reached 0.9444
 [0.8918, 0.9752] against 0.6000 for the similarity control on the same
@@ -363,25 +386,27 @@ about 0.014 USD per query as its own call.
   <img alt="Disambiguation of every picker with 95 percent intervals" src="docs/figures/png/pickers-light.png" width="90%">
 </picture>
 
-*Synthetic benchmark: every picker without a model call sits near 0.62 (all
-360 queries); one comparative call reaches 0.9444. The model-call arms ran on a
-180-query subsample, whose control is 0.6000.*
+*Synthetic benchmark arms, no MemBrain series: every picker without a model
+call sits near 0.62 (all 360 queries); one comparative call reaches 0.9444. The
+model-call arms ran on a 180-query subsample, whose control is 0.6000. MemBrain
+takes the comparison idea without the dedicated call, which this plot does not
+measure.*
 
-**What the plugin does with this.** It makes no extra call. The cards go to the
+**What MemBrain does with this.** It makes no extra call. The cards go to the
 session model, which is already reading the prompt, marked as observations that
 may not apply, and that model picks or ignores them. The 0.9444 above was measured with a dedicated call at k = 5.
 
 ### Side by side
 
-| | Standard RAG | lesson-recall |
+| | Standard RAG | MemBrain |
 |---|---|---|
 | What is stored | every passage | lesson cards with a verbatim quote |
 | When lookalikes are handled | never; they compete inside the top-k sum | at write time: duplicate, supersedes, coincides, or interferes and gets linked |
 | Read rule | marginalise over the top k, weighted by similarity | shortlist by similarity, gate on a fitted threshold |
 | Nothing fits | the top k are used anyway | silence |
-| Who picks | the similarity weight $`p_\eta`$ | the model that reads the prompt |
+| Who picks | nobody: every passage votes with weight $`p_\eta`$ | the model that reads the prompt |
 
-RAG marginalises over the top k at read time. This plugin decides at write
+RAG marginalises over the top k at read time. MemBrain decides at write
 time what a memory is and which memories it competes with, then allows silence,
 and lets the reading model choose.
 
@@ -394,10 +419,10 @@ and lets the reading model choose.
 ```
 
 The third command has Claude Code walk you through [SETUP.md](./SETUP.md): adapt
-the keyword index to your language, plan the backfill and confirm its Haiku calls
-with you, fill the store from past sessions, install the encoder, show you real cards, switch recall on, and
-optionally set up the private backup. Needs python3 3.10 or newer and the
-`claude` CLI, on Linux or macOS. 
+the keyword index to your language, plan the backfill and confirm its Haiku
+calls with you, fill the store from past sessions, install the encoder, show you
+real cards, switch recall on, and optionally set up the private backup. Needs
+python3 3.10 or newer and the `claude` CLI, on Linux or macOS.
 
 **The plugin is on as soon as it is installed.** From then on it reads new turns
 of your live sessions in the background, with Haiku calls that run through your
@@ -437,9 +462,9 @@ On 320 sampled past prompts, labelled by Haiku:
 |---|---|---|---|---|
 | None | every prompt | 0.371 | | |
 | BM25 score | 102 of 320 (31.9%) | 0.510 | 0.627 | 0.488 of 207 |
-| BM25 shortlist, encoder cosine (shipped) | 97 of 320 (30.3%) | 0.701 | 0.722 | 0.688 of 160 |
+| MemBrain gate: BM25 shortlist, encoder cosine (shipped) | 97 of 320 (30.3%) | 0.701 | 0.722 | 0.688 of 160 |
 
-The encoder gate shows 110 relevant cards against 101, with 47 fewer cards in
+The MemBrain gate shows 110 relevant cards against 101, with 47 fewer cards in
 total. Top-card precision rises by +0.191, paired bootstrap 95% interval
 [0.086, 0.300]. Over 906 labelled pairs, the cosine separates relevant from
 irrelevant cards with an AUC of 0.793, against 0.676 for the BM25 score.
@@ -462,8 +487,9 @@ pre-gate lets 70% of prompts through. The write hook returns after 77 ms.
 
 - **Transcript excerpts go to Haiku** through your own Claude login, after
   credential-shaped text is redacted. These calls use your plan's usage.
-- **The encoder is downloaded once** from PyPI and Hugging Face, checked against
-  pinned sha256 digests.
+- **The encoder is downloaded once:** its packages from PyPI at pinned versions
+  (version floors when no pinned wheel fits), its model files from Hugging Face,
+  checked against pinned sha256 digests.
 - **Cards go to your own private repository**, and only if you turn on sync.
 - **Nothing goes to the plugin author.**
 
@@ -473,9 +499,11 @@ at the end of [SETUP.md](./SETUP.md).
 
 ## License
 
-lesson-recall is **source-available**, licensed under the [PolyForm Noncommercial License 1.0.0](./LICENSE), **not** an OSI open-source license.
+lesson-recall is **source-available**, licensed under the [PolyForm
+Noncommercial License 1.0.0](./LICENSE), **not** an OSI open-source license.
 
 - **You may** use, modify, fork, and share lesson-recall freely for any **noncommercial** purpose, as long as you keep the copyright and `Required Notice:` lines (see [`NOTICE`](./NOTICE)) and credit *"lesson-recall by Keygraph, Inc."*
 - **You may not** sell it, bundle it into a paid product, or run it as a paid/hosted service **without a commercial license**.
 
-Copyright (c) 2026 Keygraph, Inc. Commercial licensing enquiries: see [`NOTICE`](./NOTICE).
+Copyright (c) 2026 Keygraph, Inc. Commercial licensing enquiries: see
+[`NOTICE`](./NOTICE).
