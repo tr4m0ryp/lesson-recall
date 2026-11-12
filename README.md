@@ -83,7 +83,7 @@ answers a question $`x`$ by retrieving passages $`z`$ and marginalising over
 the top k of them. The RAG-Sequence model is
 
 ```math
-p_{\mathrm{RAG}\text{-}\mathrm{Sequence}}(y \mid x) \;\approx\; \sum_{z \,\in\, \operatorname{top}_k\left(p(\cdot \mid x)\right)} p_\eta(z \mid x) \prod_{i=1}^{N} p_\theta\left(y_i \mid x, z, y_{1:i-1}\right)
+p_{\mathrm{RAG}\text{-}\mathrm{Sequence}}(y \mid x) \;\approx\; \sum_{z \,\in\, \mathrm{top}_k\left(p(\cdot \mid x)\right)} p_\eta(z \mid x) \prod_{i=1}^{N} p_\theta\left(y_i \mid x, z, y_{1:i-1}\right)
 ```
 
 with a dense retriever (DPR, a two-encoder search):
@@ -96,7 +96,7 @@ p_\eta(z \mid x) \;\propto\; \exp\!\left(d(z)^\top q(x)\right), \qquad d(z) = \m
 - $`z`$ is one stored passage (for us, one memory).
 - $`p_\eta(z \mid x)`$ is the retriever: how similar the passage looks to the input.
 - $`d(z)`$ and $`q(x)`$ are the passage and query embeddings; their dot product is the similarity.
-- $`\operatorname{top}_k`$ keeps the k passages with the highest $`p_\eta`$ and drops the rest.
+- $`\mathrm{top}_k`$ keeps the k passages with the highest $`p_\eta`$ and drops the rest.
 - $`p_\theta(y_i \mid x, z, y_{1:i-1})`$ is the generator: the next token given the input, one passage and the tokens so far.
 
 In words: store everything, fetch the k most similar, and let each one vote
@@ -126,7 +126,7 @@ stands against $`z'`$. So two
 quantities hide in the formula, and only one of them depends on k:
 
 ```math
-R@k = P\left(z^\ast \in \operatorname{top}_k\right), \qquad A = P\left(z^\ast = \arg\max_z \, p_\eta(z \mid x)\right)
+R@k = P\left(z^\ast \in \mathrm{top}_k\right), \qquad A = P\left(z^\ast = \arg\max_z \, p_\eta(z \mid x)\right)
 ```
 
 $`R@k`$ (recall) asks whether the right memory was fetched. $`A`$
@@ -366,7 +366,7 @@ per candidate. llm_pick makes one call that sees the prompt and all k
 candidates together:
 
 ```math
-\mathrm{pick} = \mathrm{LLM}\big(q, \operatorname{top}_k\big) \qquad \text{versus} \qquad \mathrm{pick} = \arg\max_{z \in \operatorname{top}_k} p_\eta(z \mid q)
+\mathrm{pick} = \mathrm{LLM}\big(q, \mathrm{top}_k\big) \qquad \text{versus} \qquad \mathrm{pick} = \arg\max_{z \in \mathrm{top}_k} p_\eta(z \mid q)
 ```
 
 Progress is measured as the share of the available headroom closed,
