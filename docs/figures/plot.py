@@ -51,7 +51,7 @@ def recall_vs_k(d, t):
     ax.set_ylim(0.45, 1.06)
     ax.set_xlabel("k, memories retrieved per query")
     ax.set_ylabel("share of 360 queries")
-    ax.set_title("A larger k finds the right memory, it never ranks it first")
+    ax.set_title(d["title"])
     ax.annotate(f"{rec[3]:.4f} at k=5", (5, rec[3]), (2.6, 0.985), color=t["ink2"], fontsize=8.5,
                 arrowprops={"arrowstyle": "-", "color": t["muted"], "lw": 0.8})
     ax.annotate(f"{rec[4]:.4f} from k=10", (10, 1.0), (13, 0.955), color=t["ink2"], fontsize=8.5)
@@ -71,7 +71,7 @@ def separation(d, t):
     lo, hi = d["control_ci"]
     b.axhspan(lo, hi, color=t["quiet"], alpha=0.35, lw=0)
     b.axhline(d["control"], color=t["muted"], lw=1)
-    b.text(0.8, hi + 0.008, f"no push {d['control']:.4f}, 95% interval", ha="right", va="bottom",
+    b.text(0.8, hi + 0.008, f"{d['control_label']} {d['control']:.4f}, 95% interval", ha="right", va="bottom",
            color=t["ink2"], fontsize=8)
     b.plot(s, d["pair_accuracy_m2"], marker="o", color=t["s2"], label="pairs of two lookalikes")
     b.plot(s, d["disambiguation"], marker="o", color=t["s1"], label="all queries")
@@ -81,6 +81,7 @@ def separation(d, t):
     b.legend(loc="upper right")
     for ax in (a, b):
         ax.set_xlabel("separation strength s")
+    fig.suptitle(d["title"], x=0.01, ha="left", fontsize=10.5, fontweight="bold")
     fig.tight_layout(w_pad=2.5)
     return fig
 
@@ -107,9 +108,9 @@ def pickers(d, t):
     ax.set_xlim(0.45, 1.03)
     ax.set_ylim(-0.6, len(rows) - 0.1)
     ax.set_xlabel("disambiguation: right memory picked first (95% interval)")
-    ax.set_title("Only a comparison closes the gap")
+    ax.set_title(d["title"])
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1], loc="center right", bbox_to_anchor=(0.93, 0.62), fontsize=8.5)
+    ax.legend(handles[::-1], labels[::-1], loc="lower left", fontsize=8.5)
     fig.tight_layout()
     return fig
 
@@ -131,8 +132,9 @@ def gate(d, t):
     ax.annotate("", (2, 0.80), (1, 0.80), arrowprops={"arrowstyle": "-", "color": t["muted"], "lw": 0.8})
     ax.text(1.5, 0.81, f"+{diff['value']:.3f} [{diff['ci'][0]:.3f}, {diff['ci'][1]:.3f}]", ha="center",
             va="bottom", color=t["ink2"], fontsize=8.5)
-    ax.set_title(f"Recall gate on {d['prompts']} real past prompts (labels by Haiku)")
+    ax.set_title(d["title"])
     fig.tight_layout()
+    fig.text(0.99, 0.005, d["note"], ha="right", va="bottom", color=t["muted"], fontsize=7.5)
     return fig
 
 
@@ -148,7 +150,7 @@ def decision(d, t):
     ax.grid(axis="y", visible=False)
     ax.set_xlim(0, 2900)
     ax.set_xlabel(f"judged pairs, of {d['pairs']:,}")
-    ax.set_title("Write decision on real sessions: lookalikes are common, contradictions rare")
+    ax.set_title(d["title"])
     fig.tight_layout()
     return fig
 

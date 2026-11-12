@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
   "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="451.462187pt" height="257.350797pt" viewBox="0 0 451.462187 257.350797" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="455.048125pt" height="257.350797pt" viewBox="0 0 455.048125 257.350797" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
@@ -21,8 +21,8 @@
  <g id="figure_1">
   <g id="patch_1">
    <path d="M 0 257.350797 
-L 451.462187 257.350797 
-L 451.462187 0 
+L 455.048125 257.350797 
+L 455.048125 0 
 L 0 0 
 z
 " style="fill: #fcfcfb"/>
@@ -373,7 +373,7 @@ Q 204.191099 51.968875 209.145787 53.770045
     <text style="fill: #52514e; font: 8.5px 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: end" x="426.000369" y="205.855728" transform="rotate(-0 426.000369 205.855728)">0.6194 at every k</text>
    </g>
    <g id="text_19">
-    <text style="fill: #0b0b0b; font: 700 10.5px 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start" x="42.502188" y="15.178359" transform="rotate(-0 42.502188 15.178359)">A larger k finds the right memory, it never ranks it first</text>
+    <text style="fill: #0b0b0b; font: 700 10.5px 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start" x="42.502188" y="15.178359" transform="rotate(-0 42.502188 15.178359)">Standard RAG (top-k similarity): it finds the memory, not the winner</text>
    </g>
    <g id="legend_1">
     <g id="line2d_29">
