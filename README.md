@@ -21,10 +21,7 @@ A different approach to RAG: instead of trusting top-k similarity, it decides
 at write time which memories compete, and stays silent unless one clearly fits.
 
 The approach is called **MemBrain**, and this repository is the Claude Code
-plugin for MemBrain. MemBrain is also the name of the research paper behind it
-("MemBrain: An Agent Memory Built on the Brain, and What the Measurements
-Said"); the plugin implements the part of MemBrain that survived those
-measurements.
+plugin for MemBrain. 
 
 **Not interested in the details? Stop reading here.** Install the plugin and let
 Claude set it up for you. The repository ships a [SETUP.md](./SETUP.md) written
