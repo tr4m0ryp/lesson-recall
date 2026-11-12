@@ -3,6 +3,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import transcripts
@@ -47,10 +48,15 @@ def run_hook(name, payload, env):
                           capture_output=True, text=True, timeout=30, env=env)
 
 
-def test_prompt_hook_is_silent_in_shadow_mode_and_exits_0(tmp_path):
+def test_prompt_hook_does_nothing_until_setup_switches_the_mode(tmp_path):
     env = dict(os.environ, CLAUDE_PLUGIN_ROOT=str(ROOT), RECALL_HOME=str(tmp_path / "store"),
                CLAUDE_CONFIG_DIR=str(tmp_path / "cfg"))
-    out = run_hook("prompt.sh", dict(PROMPT, transcript_path=transcripts.write(str(tmp_path / "cfg"))), env)
+    payload = dict(PROMPT, transcript_path=transcripts.write(str(tmp_path / "cfg")))
+    out = run_hook("prompt.sh", payload, env)
+    assert out.returncode == 0 and out.stdout == "" and out.stderr == ""
+    assert not (tmp_path / "store" / "log" / "read.jsonl").exists()
+    subprocess.run([sys.executable, str(ROOT / "recall" / "cli.py"), "mode", "shadow"], env=env, capture_output=True, check=True)
+    out = run_hook("prompt.sh", payload, env)
     assert out.returncode == 0 and out.stdout == "" and out.stderr == ""
     assert (tmp_path / "store" / "log" / "read.jsonl").exists()
 

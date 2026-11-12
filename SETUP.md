@@ -162,9 +162,9 @@ Without the skill, find it with
 `ls -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/lesson-recall/lesson-recall/*/ | tail -1`.
 Below, `RECALL` stands for `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py"`; type it out in full.
 
-Right after install the plugin runs in **shadow** mode: the background pass
-already writes cards from new turns of live sessions, and nothing is injected
-until step 6.
+Right after install the plugin is **off**: it calls no model and injects
+nothing. Step 3 switches it to shadow mode once the user has agreed to the Haiku
+calls (cards are written, nothing is injected), and step 6 switches injection on.
 
 ## Step 1: prerequisites
 
@@ -211,6 +211,7 @@ skip to step 4; cards will come from new sessions.
 ## Step 3: run the backfill in the background
 
 ```bash
+python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" mode shadow
 mkdir -p "${RECALL_HOME:-$HOME/.local/share/claude-recall}/log"
 nohup python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" backfill --limit 20 \
   > "${RECALL_HOME:-$HOME/.local/share/claude-recall}/log/backfill.out" 2>&1 &
