@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lesson recall command line.
+"""MemBrain command line.
 
   cli.py backfill [--dry-run] [--limit N]  turn past sessions into cards; --dry-run only counts, no model call
   cli.py pass [--transcript P] [--final]   one incremental pass (hook payload on stdin if no P)

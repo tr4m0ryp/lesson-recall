@@ -1,1 +1,1 @@
-"""Lesson recall: cards extracted from past sessions, recalled per prompt."""
+"""MemBrain: lesson cards extracted from past sessions, recalled per prompt."""

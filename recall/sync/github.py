@@ -70,7 +70,7 @@ def ensure(name, say=print):
     if info is None:
         say(f"creating private repository {slug}")
         _gh("repo", "create", slug, "--private", "--description",
-            "Lesson recall cards (append-only logs). Private: cards quote session text.")
+            "MemBrain lesson cards (append-only logs). Private: cards quote session text.")
         info = view(slug)
     if info is None:
         raise Unavailable(f"created {slug} but cannot read it back")

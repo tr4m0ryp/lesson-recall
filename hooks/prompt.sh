@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# prompt.sh -- UserPromptSubmit hook: lesson recall, read side.
+# prompt.sh -- UserPromptSubmit hook: MemBrain, read side.
 # Ranks the stored lesson cards against the prompt. When the best card clears
 # the gate, the top few are injected as background notes and the session model
 # decides whether one applies. No model call is made here; with the encoder

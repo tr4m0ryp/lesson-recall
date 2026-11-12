@@ -25,7 +25,7 @@ def git(*args, cwd=None, check=True, timeout=180):
     return out
 
 
-IDENTITY = (("user.name", "lesson-recall"), ("user.email", "lesson-recall@localhost"))
+IDENTITY = (("user.name", "membrain"), ("user.email", "membrain@localhost"))
 
 
 def clone(url, branch, gh_auth=False):

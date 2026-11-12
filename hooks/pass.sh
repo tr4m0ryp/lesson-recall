@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# pass.sh -- Stop / PreCompact / SessionEnd hook: lesson recall, write side.
+# pass.sh -- Stop / PreCompact / SessionEnd hook: MemBrain, write side.
 # Hands the session to a background pass that reads only what was added since
 # its last visit, and turns each closed episode into lesson cards (one Haiku
 # call per unit, through the user's own claude login). The pass detaches

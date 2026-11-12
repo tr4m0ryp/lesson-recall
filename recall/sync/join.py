@@ -3,7 +3,7 @@ from ..core import keys, paths
 from . import github, repo
 from .run import SyncError, sync
 
-LOCAL_ONLY = ("Card sync is optional and lesson recall works fully without it. To back the cards up to a "
+LOCAL_ONLY = ("Card sync is optional and MemBrain works fully without it. To back the cards up to a "
               "private GitHub repository, install the GitHub CLI and run `gh auth login`, or pass --remote with "
               "the URL of another private repository.")
 
