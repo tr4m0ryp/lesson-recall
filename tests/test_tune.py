@@ -1,18 +1,16 @@
 """Adapting to the user: Unicode terms, learned stop words, configurable correction cues, tune."""
-import json
 import os
 import re
-import shutil
 
 import pytest
 
 from recall.commands import config as config_cmd
-from recall.core import llm, paths, store, text
+from recall.core import llm, paths, text
 from recall.read import replay, tune
 from recall.read.score import tokens
 from recall.write import episodes, extract
 
-from tests import transcripts
+import transcripts
 
 GERMAN = ["bitte die Tests im Ordner {} mit der neuen Flagge starten und das Ergebnis zeigen",
           "warum ist der Build für {} schon wieder kaputt, prüfe die Größe der Datei",
@@ -53,7 +51,7 @@ def test_ascii_english_and_dutch_terms_are_unchanged_without_tuning():
 
 
 def test_non_ascii_words_survive_and_cjk_becomes_bigrams():
-    assert "größe" in tokens("Prüfe die Größe der Datei")
+    assert "grösse" in tokens("Prüfe die Größe der Datei")   # casefolded: ß becomes ss
     assert "ändern" in tokens("Bitte ÄNDERN")
     assert text.words("テストを実行") == ["テス", "スト", "トを", "を実", "実行"]
     assert text.words("pytest実行") == ["pytest", "実行"]
@@ -77,8 +75,8 @@ def test_too_few_prompts_keep_the_builtin_list():
 
 def test_tune_is_idempotent_makes_no_model_call_and_changes_tokens(isolated):
     for i in range(30):
-        transcripts.write(str(isolated), [("user", p.format(f"modul{i}")) if j % 2 == 0 else ("assistant", "ok")
-                                          for j, p in enumerate(x for g in GERMAN for x in (g, g))])
+        transcripts.write(str(isolated), [t for p in GERMAN for t in (("user", p.format(f"modul{i}")),
+                                                                       ("assistant", "ok"))])
     paths.set_config(stop_min_prompts=50)
     assert "und" in tokens("Tests und Build")               # built-in list knows no German
     first = tune.tune()
@@ -129,12 +127,11 @@ def test_cards_are_written_in_the_configured_language(isolated, monkeypatch):
         seen["system"] = system
         return {"cards": []}, 0.0
     monkeypatch.setattr(llm, "ask", ask)
-    cache = os.path.join(paths.CACHE)
     turns = [{"kind": "user", "text": "x" * 400, "off": 0, "ts": "2026-01-01T00:00:00Z"}]
     ep = {"id": "lang-test", "lo": 0, "hi": 0, "events": [], "ts": "2026-01-01T00:00:00Z"}
     extract.extract(turns, ep, "s", "-home-u-projects-x", dict(paths.config(), card_language="German"))
     assert "trigger in German." in seen["system"]
-    os.remove(os.path.join(cache, "lang-test.json"))
+    os.remove(os.path.join(paths.CACHE, "lang-test.json"))
 
 
 def test_link_score_is_a_quantile_of_the_stored_links():
@@ -142,4 +139,3 @@ def test_link_score_is_a_quantile_of_the_stored_links():
                        "links": [{"differs_from": "x", "condition": "c", "score": float(i)}]} for i in range(10)}
     assert replay.fit_links(cards, 0.5) == 5.0
     assert replay.fit_links({"a": {"id": "a", "status": "active", "links": []}}, 0.5) is None
-    assert store and shutil and json   # imported for fixtures in sibling tests
