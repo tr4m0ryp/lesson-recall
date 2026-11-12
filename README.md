@@ -203,7 +203,8 @@ which `calibrate` sets so that half of the stored links qualify. Nothing is
 merged or deleted: the store is an append-only event log.
 
 **Number.** On 2,135 real judged pairs: 1,787 INTERFERENCE (1,036 with a named
-condition), 270 DEFER, 64 DUPLICATE, 12 COINCIDENCE, 2 SUPERSESSION. The classes are the Haiku judge's labels.
+condition), 270 DEFER, 64 DUPLICATE, 12 COINCIDENCE, 2 SUPERSESSION. The
+classes are the Haiku judge's labels.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/png/write-decision-dark.png">
@@ -342,8 +343,8 @@ relevant in 0.701 of fires (30.3% fire) against 0.510 for a BM25-only gate
 (31.9% fire), and 0.371 with no gate. Paired bootstrap 95% interval of the
 difference: +0.191 [0.086, 0.300]. Over 906 labelled card pairs the cosine separates
 relevant from irrelevant cards with an AUC of 0.793, against 0.676 for the
-BM25 score. The encoder and card text were chosen among 18 variants on the
-same 320 prompts (the weakest scored 0.608).
+BM25 score. The encoder and card text were chosen among 18 variants on these
+320 prompts; the lowest of them scored 0.608.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/figures/png/gate-dark.png">
@@ -394,7 +395,8 @@ measure.*
 
 **What MemBrain does with this.** It makes no extra call. The cards go to the
 session model, which is already reading the prompt, marked as observations that
-may not apply, and that model picks or ignores them. The 0.9444 above was measured with a dedicated call at k = 5.
+may not apply, and that model picks or ignores them. The 0.9444 above was
+measured with a dedicated call at k = 5.
 
 ### Side by side
 

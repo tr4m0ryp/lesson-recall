@@ -32,11 +32,12 @@ user wants depth. The short version, for explaining it in a few sentences:
   count twice) shortlists 3 in-scope cards; the MemBrain gate (a local encoder) shows a card
   only above a threshold fitted so that a share 0.33 of the user's own past
   prompts would fire. Top card relevant in 0.701 of fires against 0.510 for a
-  BM25-only gate (320 real prompts, labels by Haiku, gate
+  BM25-only gate (320 past prompts from real sessions, labels by Haiku, gate
   chosen among 18 variants on them).
 - **The session model picks.** One comparative LLM call picked the right memory
   0.9444 of the time against 0.6194 by similarity (synthetic, k=5, 180-query
-  subsample). The plugin makes no extra call: the session model, which already reads the prompt, makes the pick.
+  subsample). The plugin makes no extra call: the session model, which already
+  reads the prompt, makes the pick.
 - **What failed.** Moving stored vectors apart symmetrically cannot reorder a
   pair (proven inside its premises; 0 of 14 configurations cleared the bar),
   surprise did not select lessons (53.0% against 53.3%), and the recollection
