@@ -8,10 +8,12 @@
   cli.py mode on|shadow|off                switch injection (shadow: cards are written, nothing injected)
   cli.py stats | replay                    store counts | firing counts over past prompts
   cli.py cards [--limit N]                 the newest active cards, one line each
+  cli.py tune                              learn stop words from past prompts, estimate their language; no model call
   cli.py calibrate [--rate R]              fit the gate thresholds to a target firing rate
+  cli.py config show|set|add|remove        read or change config.json (set KEY VALUE, add KEY VALUE, ...)
   cli.py dense install|status|off          second gate stage: a local encoder reranks the BM25 shortlist
   cli.py sync init|now|status|scrub        optional: back the cards up to a private repository
-  cli.py setup [--sync]                    encoder install, gate fit, mode on; --sync adds the backup first
+  cli.py setup [--sync]                    tune, encoder install, gate fit, mode on; --sync adds the backup first
 """
 import argparse
 import os
@@ -19,7 +21,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-from recall.commands import install, live, show  # noqa: E402
+from recall.commands import config, install, live, show  # noqa: E402
 from recall.core import paths  # noqa: E402
 
 
@@ -59,6 +61,12 @@ def parser():
     p.set_defaults(fn=install.cmd_setup)
     from recall import sync
     sync.register(sub)
+    sub.add_parser("tune").set_defaults(fn=install.cmd_tune)
+    p = sub.add_parser("config")
+    p.add_argument("action", choices=["show", "set", "add", "remove"])
+    p.add_argument("key", nargs="?")
+    p.add_argument("value", nargs="?")
+    p.set_defaults(fn=config.cmd_config)
     p = sub.add_parser("calibrate")
     p.add_argument("--rate", type=float)
     p.set_defaults(fn=install.cmd_calibrate)
