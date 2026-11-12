@@ -48,17 +48,18 @@ def run_hook(name, payload, env):
                           capture_output=True, text=True, timeout=30, env=env)
 
 
-def test_prompt_hook_does_nothing_until_setup_switches_the_mode(tmp_path):
+def test_prompt_hook_is_on_by_default_and_does_nothing_when_switched_off(tmp_path):
     env = dict(os.environ, CLAUDE_PLUGIN_ROOT=str(ROOT), RECALL_HOME=str(tmp_path / "store"),
                CLAUDE_CONFIG_DIR=str(tmp_path / "cfg"))
     payload = dict(PROMPT, transcript_path=transcripts.write(str(tmp_path / "cfg")))
-    out = run_hook("prompt.sh", payload, env)
+    log = tmp_path / "store" / "log" / "read.jsonl"
+    out = run_hook("prompt.sh", payload, env)             # on, empty store: logged, nothing to inject
     assert out.returncode == 0 and out.stdout == "" and out.stderr == ""
-    assert not (tmp_path / "store" / "log" / "read.jsonl").exists()
-    subprocess.run([sys.executable, str(ROOT / "recall" / "cli.py"), "mode", "shadow"], env=env, capture_output=True, check=True)
+    assert json.loads(log.read_text().splitlines()[-1])["mode"] == "on"
+    subprocess.run([sys.executable, str(ROOT / "recall" / "cli.py"), "mode", "off"], env=env, capture_output=True, check=True)
+    log.unlink()
     out = run_hook("prompt.sh", payload, env)
-    assert out.returncode == 0 and out.stdout == "" and out.stderr == ""
-    assert (tmp_path / "store" / "log" / "read.jsonl").exists()
+    assert out.returncode == 0 and out.stdout == "" and out.stderr == "" and not log.exists()
 
 
 def test_hooks_are_inert_without_python(tmp_path):

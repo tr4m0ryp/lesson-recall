@@ -8,6 +8,30 @@ disable-model-invocation: true
 
 Read `${CLAUDE_PLUGIN_ROOT}/SETUP.md` in full, then follow it top to bottom.
 
+## Tell the user this before you start
+
+Explain in your own words, in four or five lines, what is about to happen:
+
+1. **A workflow analyses all of their past Claude Code sessions.** It reads every
+   transcript under their Claude config folder. Nothing is sent anywhere at this stage.
+2. **It filters out the sessions worth learning from.** A session qualifies when
+   a person actually worked in it: at least two typed user turns, not a scripted
+   or headless run, not one of many sessions that open with the same template.
+3. **It converts the qualifying sessions into lesson cards.** Each stretch of a
+   session goes to Haiku once, which writes 0 to 2 cards: what the lesson is
+   about, the lesson, and the kind of request that should bring it back. A card
+   is kept only if its supporting quote is found word for word in the session.
+4. **It builds the retrieval architecture on top of the cards.** Every new card
+   is compared with its nearest existing cards and filed as new, a repeat, a
+   replacement or a related lookalike. Then a keyword index shortlists cards per
+   prompt, and a small local encoder decides whether any is close enough to show.
+   The thresholds are fitted on the user's own past prompts.
+
+Then state the two facts the user must know: the Haiku calls in step 3 run
+through their own Claude login and count against their plan's usage, and the
+plugin has been on since it was installed, so new sessions are already being
+read and matching cards are already injected.
+
 - The plugin is installed at `${CLAUDE_PLUGIN_ROOT}`. SETUP.md's commands start with `export CLAUDE_PLUGIN_ROOT=...`; use that path there.
 - Run the check after each step before moving on. Stop and tell the user if a check fails.
 - Step 2 spends the user's own Claude plan usage: show the plan numbers and get the user's go-ahead (or a `--limit`) before running the backfill.

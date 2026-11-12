@@ -162,9 +162,11 @@ Without the skill, find it with
 `ls -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/lesson-recall/lesson-recall/*/ | tail -1`.
 Below, `RECALL` stands for `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py"`; type it out in full.
 
-Right after install the plugin is **off**: it calls no model and injects
-nothing. Step 3 switches it to shadow mode once the user has agreed to the Haiku
-calls (cards are written, nothing is injected), and step 6 switches injection on.
+The plugin is **on from the moment it is installed**: the background pass writes
+cards from new turns of live sessions, through Haiku calls on the user's own
+Claude login, and matching cards are injected. Tell the user this first. Until
+the steps below have run, the store only knows sessions held since the install,
+and the gate runs on keyword scores alone.
 
 ## Step 1: prerequisites
 
@@ -211,7 +213,6 @@ skip to step 4; cards will come from new sessions.
 ## Step 3: run the backfill in the background
 
 ```bash
-python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" mode shadow
 mkdir -p "${RECALL_HOME:-$HOME/.local/share/claude-recall}/log"
 nohup python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" backfill --limit 20 \
   > "${RECALL_HOME:-$HOME/.local/share/claude-recall}/log/backfill.out" 2>&1 &
@@ -269,7 +270,7 @@ stays silent. Both are normal.
 
 **Check:** `stats` shows `cards` above 0, and the user has seen real cards.
 
-## Step 6: switch recall on
+## Step 6: confirm recall is on
 
 ```bash
 python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" mode on

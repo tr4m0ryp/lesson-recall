@@ -78,8 +78,14 @@ The third command has Claude Code walk you through [SETUP.md](./SETUP.md): plan
 the backfill and confirm its Haiku calls with you, fill the store from past
 sessions, install the encoder, show you real cards, switch recall on, and
 optionally set up the private backup. Needs python3 3.10 or newer and the
-`claude` CLI, on Linux or macOS. Until setup has your go-ahead the plugin is off:
-it calls no model and injects nothing.
+`claude` CLI, on Linux or macOS. 
+
+**The plugin is on as soon as it is installed.** From then on it reads new turns
+of your live sessions in the background, with Haiku calls that run through your
+own Claude login and count against your plan's usage, and it injects cards that
+clear the gate. Past sessions are only covered once setup has run the backfill,
+which asks you first. Switch it off at any time with
+`python3 <plugin root>/recall/cli.py mode off`.
 
 ## How well it works
 

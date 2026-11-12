@@ -32,7 +32,7 @@ REMOTE = os.path.join(HOME, "remote")              # other devices' event logs, 
 SYNC = os.path.join(HOME, "sync")                  # clone of the card repository plus sync state
 
 DEFAULTS = {
-    "mode": "off",             # off | shadow | on; off until setup has the user's go-ahead
+    "mode": "on",              # off | shadow | on
     "gate_score": 10.5,        # minimum BM25 score: for the prompt to fire, and for each card
     "gate_rate": 0.33,         # share of past prompts that should fire; calibrate fits gate_score to it
     "gate_cards": 0,           # active cards when gate_score was last fitted (0: never)
