@@ -169,7 +169,7 @@ def main():
         os.makedirs(os.path.join(HERE, sub), exist_ok=True)
     if args.pdf:
         os.makedirs(args.pdf, exist_ok=True)
-    plt.rcParams["svg.hashsalt"] = "lesson-recall"
+    plt.rcParams["svg.hashsalt"] = "membrain"
     plt.rcParams["svg.fonttype"] = "none"
     for name, (key, draw) in FIGURES.items():
         for mode, t in THEMES.items():

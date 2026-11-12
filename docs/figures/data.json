@@ -1,12 +1,12 @@
 {
-  "about": "Every value plotted in docs/figures (MemBrain, as implemented by the lesson-recall plugin, and the benchmark arms it was measured against), copied from the research record and never recomputed. 'synthetic' means the generated MemBrain benchmark corpus (120 episodes, 360 queries, 33 clusters of lookalikes, MiniLM encoder, 5 seeds, cluster-BCa intervals at B = 10000). 'real' means the author's own Claude Code sessions, labelled by Haiku.",
+  "about": "Every value plotted in docs/figures (MemBrain, as implemented by its Claude Code plugin, and the benchmark arms it was measured against), copied from the research record and never recomputed. 'synthetic' means the generated MemBrain benchmark corpus (120 episodes, 360 queries, 33 clusters of lookalikes, MiniLM encoder, 5 seeds, cluster-BCa intervals at B = 10000). 'real' means the author's own Claude Code sessions, labelled by Haiku.",
   "sources": {
     "ksweep": "MemBrain research record, k-sweep of plain vector search and BM25 over k = 1..50 (2026-08-01), summarised in the MemBrain paper, Section 4",
     "separation": "MemBrain paper, Table 3 (write-time separation strength against disambiguation, decorrelate mode) and its caption",
     "veto": "MemBrain paper, Table 8 (retrieval arms on the 180-query stratified subsample)",
     "free_arms": "MemBrain paper, Section 4 text (best separation cell and the lexical control), interval of plain vector from the k-sweep record",
-    "gate": "lesson-recall design record, read-side measurements of 2026-11-11 (320 sampled past prompts, labels by Haiku)",
-    "decision": "lesson-recall design record, write-decision log of the first backfill (2,135 judged pairs)"
+    "gate": "MemBrain plugin design record, read-side measurements of 2026-11-11 (320 sampled past prompts, labels by Haiku)",
+    "decision": "MemBrain plugin design record, write-decision log of the first backfill (2,135 judged pairs)"
   },
   "recall_vs_k": {
     "data": "synthetic",
