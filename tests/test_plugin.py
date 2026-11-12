@@ -38,7 +38,7 @@ def test_every_referenced_script_exists_and_is_executable():
 def test_manifests_name_the_plugin_and_its_root_source():
     plugin = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text())
     market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text())
-    assert plugin["name"] == "lesson-recall" == market["plugins"][0]["name"]
+    assert plugin["name"] == "membrain" == market["plugins"][0]["name"] == market["name"]
     assert market["plugins"][0]["source"] == "./" and market["owner"]["name"]
     assert (ROOT / "skills" / "setup" / "SKILL.md").is_file()
 

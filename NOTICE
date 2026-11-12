@@ -1,11 +1,11 @@
-lesson-recall
+MemBrain Claude Code plugin
 Long-term memory for Claude Code: lesson cards written from past sessions and
 recalled per prompt behind a fitted gate.
 
 Copyright (c) 2026 Keygraph, Inc.
 
 Required Notice: Copyright (c) 2026 Keygraph, Inc.
-Required Notice: lesson-recall, https://github.com/tr4m0ryp/lesson-recall
+Required Notice: MemBrain Claude Code plugin, https://github.com/tr4m0ryp/membrain-claude-plugin
 
 Licensed under the PolyForm Noncommercial License 1.0.0 (see LICENSE). This is a
 source-available licence, not an OSI open-source licence.
@@ -15,7 +15,7 @@ ATTRIBUTION
 Anyone who receives any part of this software must also receive a copy of the
 licence terms, or the URL for them, together with every plain-text line above
 that begins with "Required Notice:". Work that uses or builds on this software
-must credit "lesson-recall by Keygraph, Inc."
+must credit "MemBrain Claude Code plugin by Keygraph, Inc."
 
 PERMITTED USE
 
@@ -29,7 +29,7 @@ paid or hosted service requires a commercial licence.
 COMMERCIAL LICENSING
 
 For a commercial licence, open an issue at
-https://github.com/tr4m0ryp/lesson-recall/issues and a maintainer will reply.
+https://github.com/tr4m0ryp/membrain-claude-plugin/issues and a maintainer will reply.
 
 THIRD-PARTY MATERIAL
 

@@ -1,5 +1,5 @@
 {
-  "name": "lesson-recall",
+  "name": "membrain",
   "owner": {
     "name": "Keygraph, Inc."
   },
@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "lesson-recall",
+      "name": "membrain",
       "source": "./",
       "description": "MemBrain: long-term memory for Claude Code. Lessons from your past sessions, recalled per prompt behind a fitted gate. A different approach to RAG: instead of trusting top-k similarity, it decides at write time which memories compete, and stays silent unless one clearly fits."
     }

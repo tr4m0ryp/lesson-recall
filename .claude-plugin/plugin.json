@@ -1,10 +1,10 @@
 {
-  "name": "lesson-recall",
-  "version": "0.1.3",
+  "name": "membrain",
+  "version": "0.2.0",
   "description": "MemBrain: long-term memory for Claude Code. Lessons from your past sessions, recalled per prompt behind a fitted gate. A different approach to RAG: instead of trusting top-k similarity, it decides at write time which memories compete, and stays silent unless one clearly fits.",
   "author": {"name": "Keygraph, Inc."},
-  "homepage": "https://github.com/tr4m0ryp/lesson-recall",
-  "repository": "https://github.com/tr4m0ryp/lesson-recall",
+  "homepage": "https://github.com/tr4m0ryp/membrain-claude-plugin",
+  "repository": "https://github.com/tr4m0ryp/membrain-claude-plugin",
   "license": "PolyForm-Noncommercial-1.0.0",
   "keywords": ["memory", "hooks", "recall", "lessons", "rag"]
 }
