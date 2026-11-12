@@ -1,4 +1,4 @@
-"""Inspection and the switch: query, stats, replay, mode."""
+"""Inspection and the switch: query, stats, cards, replay, mode."""
 import collections
 import glob
 import json
@@ -45,3 +45,13 @@ def cmd_stats(_):
 def cmd_replay(_):
     from ..read import replay
     print(json.dumps(replay.replay(), indent=2, ensure_ascii=False))
+
+
+def cmd_cards(args):
+    """The newest active cards, one line each: what the store has learned so far."""
+    cards, _ = store.load()
+    live = sorted(store.active(cards), key=lambda c: (c.get("ts", ""), c["id"]), reverse=True)
+    for card in live[: args.limit]:
+        print(f"[{card.get('kind') or 'card'}, {card.get('scope', '')}] {card['referent']}: "
+              f"{card['lesson']}\n    applies when: {card['trigger']}")
+    print(f"{min(args.limit, len(live))} of {len(live)} active cards")

@@ -7,6 +7,7 @@
   cli.py query TEXT [--cwd DIR]            show what a prompt would recall
   cli.py mode on|shadow|off                switch injection (shadow: cards are written, nothing injected)
   cli.py stats | replay                    store counts | firing counts over past prompts
+  cli.py cards [--limit N]                 the newest active cards, one line each
   cli.py calibrate [--rate R]              fit the gate thresholds to a target firing rate
   cli.py dense install|status|off          second gate stage: a local encoder reranks the BM25 shortlist
   cli.py sync init|now|status|scrub        optional: back the cards up to a private repository
@@ -45,6 +46,9 @@ def parser():
     p.set_defaults(fn=show.cmd_mode)
     sub.add_parser("stats").set_defaults(fn=show.cmd_stats)
     sub.add_parser("replay").set_defaults(fn=show.cmd_replay)
+    p = sub.add_parser("cards")
+    p.add_argument("--limit", type=int, default=10)
+    p.set_defaults(fn=show.cmd_cards)
     p = sub.add_parser("dense")
     p.add_argument("action", choices=["install", "status", "off"])
     p.set_defaults(fn=install.cmd_dense)
