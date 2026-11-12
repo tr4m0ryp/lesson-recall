@@ -41,12 +41,35 @@ user wants depth. The short version, for explaining it in a few sentences:
 
 - **Transcript excerpts go to Haiku** through the user's own `claude` login, after
   credential-shaped text is redacted. This uses the user's Claude plan usage.
-- **The encoder is downloaded once** (step 4) from PyPI and Hugging Face.
+- **The encoder is downloaded once** (step 5) from PyPI and Hugging Face.
 - **Cards go to the user's own private repository**, and only if they enable sync
-  (step 7).
+  (step 8).
 - **Nothing goes to the plugin author.**
 
 Everything else stays in the store, `${RECALL_HOME:-$HOME/.local/share/claude-recall}`.
+
+## What is fitted to you, and what is a default
+
+- **Fitted to the user's own data:** the stop words (`tune`, from their past
+  prompts); the gate thresholds `gate_score`, `dense_pre` and `dense_gate`
+  (`calibrate`, quantiles of their replayed prompts); `link_score` (`calibrate`,
+  so that half of the stored "not to be confused with" links are shown). The
+  thresholds refit by themselves once the store has grown by 15%; re-run
+  `tune` now and then as the user writes more prompts.
+- **Set for the user in step 2:** `correction_cues`, `card_language`, and
+  whether the encoder runs (`dense`).
+- **Defaults chosen by the author, not fitted to anyone:** a third of past
+  prompts should fire (`gate_rate` 0.33), the pre-gate lets 70% through,
+  stop words at 10% of prompts, BM25 with k1 = 1.2 and b = 0.75, trigger and
+  referent counted twice, 3 cards shown, 5 neighbours per write decision, units
+  of at most 14,000 characters, prompts under 24 characters skipped.
+- **Fallbacks from the author's sessions, used only until `calibrate` runs:**
+  `gate_score` 10.5, `dense_pre` 8.0, `dense_gate` 0.68, `link_score` 25.
+- **Language-specific parts:** the encoder (English; for other languages setup
+  uses the keyword gate), the suffix trimming in the keyword index (English),
+  and the prompt floor, counted in characters (24).
+
+All of these live in `config.json` in the store; `cli.py config show` lists them.
 
 ## Before you start
 
@@ -77,12 +100,62 @@ python3 --version; git --version; command -v claude || ls ~/.local/bin/claude; c
 - **python3 3.10 or newer** is required (tested on 3.12). Missing or older: tell the
   user the plugin stays inert until they install it (macOS: `brew install python`;
   Debian/Ubuntu: `sudo apt install python3 python3-venv`). Stop here.
-- **git** is needed only for sync (step 7). Missing: skip step 7.
+- **git** is needed only for sync (step 8). Missing: skip step 8.
 - **claude** must resolve, because cards are written by `claude -p --model haiku`.
-- **gh** (GitHub CLI, logged in) is optional and only used by step 7.
+- **gh** (GitHub CLI, logged in) is optional and only used by step 8.
 - Runs on Linux and macOS.
 
-## Step 2: plan the backfill (no model call)
+## Step 2: adapt it to this user (no model call)
+
+```bash
+python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" tune
+```
+
+This reads the user's past typed prompts, the same ones the gate is later fitted
+on, and calls no model. It learns the user's **stop words**: every term found in
+at least 10% of their prompts (config `stop_df`), at most 150. Such a term is in
+almost every prompt, so it cannot tell cards apart, whatever its language. With
+fewer than 100 prompts the built-in list stays, which is English plus Dutch only.
+It also prints a **language estimate**: the share of prompts in which at least
+15% of the terms are common English function words. That is a heuristic, not a
+classifier. Re-running it is safe: the same prompts give the same result.
+
+Show the user `top_stopwords`, `non_ascii_token_share`, `english_prompt_share`
+and `language_estimate`. You can read their language from the stop words
+yourself; trust that over the heuristic. Then make three decisions:
+
+1. **Correction cues.** These are the words that mark a user turn as a
+   correction (defaults: English and Dutch). For each other language the user
+   writes in, add three to five words they would type to stop or correct an agent:
+
+   ```bash
+   python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" config add correction_cues "falsch"
+   ```
+
+   Cues are regular expressions, matched case-insensitively as whole words in
+   the first 400 characters of a user turn; in Chinese, Japanese or Thai they
+   match anywhere. Do not spend long on this. Cues only decide where a session
+   is cut into units, and every stretch is read either way: on the author's
+   sessions flagged and calm stretches held a lesson at the same rate (53.0%
+   and 53.3%).
+2. **Card language.** Cards are written in English by default. If most prompts
+   are in another language, write the cards in that language, so their words
+   match the prompts that should recall them:
+
+   ```bash
+   python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" config set card_language "German"
+   ```
+3. **Gate.** The encoder in step 5 is English only. If `language_estimate` is
+   `mostly not English`, skip it: in step 5 run `dense off` and `calibrate`
+   instead of `dense install`, and tell the user why. Recall then gates on the
+   keyword score alone (on English prompts: top card relevant in 0.510 of fires,
+   against 0.701 with the encoder).
+
+**Check:** `tune` printed `"stopwords": "learned"` (or says why it kept the
+built-in list), and `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" config show`
+shows the cues and card language you set.
+
+## Step 3: plan the backfill (no model call)
 
 ```bash
 python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" backfill --dry-run
@@ -107,9 +180,9 @@ python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" backfill --dry-run --limit 20
 ```
 
 **Check:** the user said yes to a specific command. If `sessions_qualify` is 0,
-skip to step 4; cards will come from new sessions.
+skip to step 5; cards will come from new sessions.
 
-## Step 3: run the backfill in the background
+## Step 4: run the backfill in the background
 
 ```bash
 mkdir -p "${RECALL_HOME:-$HOME/.local/share/claude-recall}/log"
@@ -131,7 +204,7 @@ unit cut off mid-decision repeats.
 
 **Check:** the last line starts with `written:`.
 
-## Step 4: install the encoder and fit the gate
+## Step 5: install the encoder and fit the gate
 
 ```bash
 python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" dense install
@@ -145,12 +218,19 @@ of bge-small-en-v1.5 (a 66 MB local encoder) from
 refuses any file whose sha256 differs from the pinned value. It then fits both
 gate thresholds on the user's past prompts, which takes minutes of CPU.
 
+If step 2 found the prompts mostly not English, run this instead and skip the check below:
+
+```bash
+python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" dense off
+python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" calibrate
+```
+
 **Check:** the last line is JSON with `"dense": true` and `"model_ready": true`.
 If the install fails, run `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" dense off`
 then `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" calibrate`; recall then gates on
 BM25 alone, which is less precise.
 
-## Step 5: show the user what was learned
+## Step 6: show the user what was learned
 
 ```bash
 python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" stats
@@ -169,7 +249,7 @@ stays silent. Both are normal.
 
 **Check:** `stats` shows `cards` above 0, and the user has seen real cards.
 
-## Step 6: confirm recall is on
+## Step 7: confirm recall is on
 
 ```bash
 python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" mode on
@@ -178,7 +258,7 @@ python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" mode on
 **Check:** the printed config has `"mode": "on"`. From the next prompt on,
 matching cards arrive as a `<recalled-lessons>` block.
 
-## Step 7: optional private backup and sync
+## Step 8: optional private backup and sync
 
 Ask the user whether they want it. Cards quote session text, so the repository
 **must be private**. With the GitHub CLI logged in:
@@ -198,7 +278,7 @@ user confirms it is private.
 yet). Show the user `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" sync status`
 and confirm the repository URL with them. Later syncs run in the background.
 
-## Step 8: verify, and how to undo
+## Step 9: verify, and how to undo
 
 **Verification checklist:**
 - `stats` shows `"mode": "on"`, the gate (`dense` or `bm25`), and cards.
