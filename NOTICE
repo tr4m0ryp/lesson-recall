@@ -1,0 +1,52 @@
+lesson-recall
+Long-term memory for Claude Code: lesson cards written from past sessions and
+recalled per prompt behind a fitted gate.
+
+Copyright (c) 2026 Keygraph, Inc.
+
+Required Notice: Copyright (c) 2026 Keygraph, Inc.
+Required Notice: lesson-recall, https://github.com/tr4m0ryp/lesson-recall
+
+Licensed under the PolyForm Noncommercial License 1.0.0 (see LICENSE). This is a
+source-available licence, not an OSI open-source licence.
+
+ATTRIBUTION
+
+Anyone who receives any part of this software must also receive a copy of the
+licence terms, or the URL for them, together with every plain-text line above
+that begins with "Required Notice:". Work that uses or builds on this software
+must credit "lesson-recall by Keygraph, Inc."
+
+PERMITTED USE
+
+Any noncommercial purpose is permitted, including academic research, teaching,
+personal study, and use by charitable, educational, public-research, public
+safety or health, environmental, and government organisations.
+
+Selling this software, bundling it into a paid product, or operating it as a
+paid or hosted service requires a commercial licence.
+
+COMMERCIAL LICENSING
+
+TODO: add a commercial-licensing contact address before this repository is made
+public. Do not substitute a personal email.
+
+THIRD-PARTY MATERIAL
+
+Nothing third-party is redistributed in this repository. The optional encoder
+step downloads, at install time and into the user's local store, the Python
+packages onnxruntime, tokenizers and numpy from PyPI, and the bge-small-en-v1.5
+ONNX model files from Hugging Face, each under its own licence. The model files
+are checked against pinned sha256 digests.
+
+TRADEMARKS
+
+"Keygraph" and the Keygraph logo are trademarks of Keygraph, Inc. The licence
+grants no trademark rights, and no permission is given to use the name to
+endorse or promote derived work.
+
+NO WARRANTY
+
+As far as the law allows, this software comes as is, without any warranty or
+condition, and the licensor is not liable for any damages arising out of the
+licence terms or the use or nature of the software.
