@@ -258,9 +258,11 @@ call: zero cards retired.
 **Brain.** A memory comes back when the cue matches how it was stored
 (encoding specificity) and more easily in the same context.
 
-**Math.** Text becomes terms by lowercasing, splitting on non-alphanumerics,
-dropping stop words and one-letter tokens, and trimming a few English
-suffixes. The trigger and referent are the retrieval key, so a card's term
+**Math.** Text becomes terms by casefolding, taking runs of Unicode word
+characters (character pairs in scripts written without spaces), dropping stop
+words and one-letter terms, and trimming a few English suffixes. The stop words
+are learned from your own prompts by `cli.py tune`: every term found in at least
+10% of them. Before that, a built-in English and Dutch list applies. The trigger and referent are the retrieval key, so a card's term
 counts are $`f(t, c) = 2 f_{\mathrm{key}}(t, c) + f_{\mathrm{lesson}}(t, c)`$.
 Each distinct prompt term counts once in the BM25 score:
 
@@ -391,9 +393,9 @@ and lets the reading model choose.
 /lesson-recall:setup
 ```
 
-The third command has Claude Code walk you through [SETUP.md](./SETUP.md): plan
-the backfill and confirm its Haiku calls with you, fill the store from past
-sessions, install the encoder, show you real cards, switch recall on, and
+The third command has Claude Code walk you through [SETUP.md](./SETUP.md): adapt
+the keyword index to your language, plan the backfill and confirm its Haiku calls
+with you, fill the store from past sessions, install the encoder, show you real cards, switch recall on, and
 optionally set up the private backup. Needs python3 3.10 or newer and the
 `claude` CLI, on Linux or macOS. 
 
@@ -453,7 +455,8 @@ pre-gate lets 70% of prompts through. The write hook returns after 77 ms.
 - **Labels:** by Haiku, one call per prompt.
 - **Gate choice:** the encoder and its card text were chosen among 18 variants on
   the same 320 prompts; the lowest variant measured 0.608.
-- **Encoder:** English (bge-small-en-v1.5).
+- **Encoder:** English (bge-small-en-v1.5). For prompts mostly in other
+  languages, setup uses the keyword gate.
 
 ## What leaves your machine
 
