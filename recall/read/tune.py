@@ -58,6 +58,12 @@ def _current():
         return None
 
 
+def suggestion(share):
+    if share is None:
+        return "none yet: no prompts to judge"
+    return "encoder" if share >= MOSTLY_ENGLISH else "bm25: the encoder is English-only, run dense off"
+
+
 def tune():
     """Learn and save this user's stop words. Idempotent: the same prompts give the same file."""
     cfg = paths.config()
@@ -86,8 +92,7 @@ def tune():
         "language_estimate": ("unknown" if share is None else
                               "mostly English" if share >= MOSTLY_ENGLISH else "mostly not English"),
         "language_method": "heuristic: share of prompts whose terms are at least 15% common English function words",
-        "gate_suggestion": ("encoder (English model fits)" if share is not None and share >= MOSTLY_ENGLISH
-                            else "bm25 (dense off): the encoder is English-only"),
+        "gate_suggestion": suggestion(share),
         "card_language": cfg["card_language"],
         "changed": changed,
     }

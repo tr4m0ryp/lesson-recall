@@ -1,4 +1,4 @@
-"""Building the store and its gate: backfill (or its plan), calibrate, dense, setup."""
+"""Building the store and its gate: backfill (or its plan), tune, calibrate, dense, setup."""
 import json
 import os
 import subprocess
@@ -24,6 +24,11 @@ def cmd_calibrate(args):
     print(json.dumps(replay.calibrate(args.rate)))
 
 
+def cmd_tune(args):
+    from ..read import tune
+    print(json.dumps(tune.tune(), ensure_ascii=False, indent=2))
+
+
 def cmd_dense(args):
     """install: private venv, pinned packages, checked model files, then fit the gates. off: BM25 gate only."""
     from ..read.dense import encoder, setup
@@ -39,12 +44,23 @@ def cmd_dense(args):
 
 
 def cmd_setup(args):
-    """Local by default: install the encoder, fit the gates, switch injection on. --sync adds the backup first."""
+    """Local by default: adapt to the user, install the encoder, fit the gates, switch injection on.
+
+    Tune runs first because its stop words change the BM25 scores the gates are fitted on. When the
+    user's prompts are mostly not English, the English-only encoder is skipped and the BM25 gate fitted.
+    --sync adds the backup first.
+    """
+    from ..read import tune
     steps = []
     if args.sync:
         init = ["sync", "init"] + (["--remote", args.remote] if args.remote else [])
         steps.append(init + (["--assume-private"] if args.assume_private else []))
-    steps += [["dense", "install"], ["mode", "on"]]
+    print("== tune", flush=True)
+    tuned = tune.tune()
+    print(json.dumps(tuned, ensure_ascii=False), flush=True)
+    english = tuned["english_prompt_share"] is None or tuned["english_prompt_share"] >= tune.MOSTLY_ENGLISH
+    steps += [["dense", "install"]] if english else [["dense", "off"], ["calibrate"]]
+    steps += [["mode", "on"]]
     for step in steps:
         print("==", " ".join(step), flush=True)
         subprocess.run([sys.executable, CLI] + step, check=True)
