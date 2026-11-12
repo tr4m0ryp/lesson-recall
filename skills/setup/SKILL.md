@@ -1,18 +1,18 @@
 ---
 name: setup
-description: Set up lesson recall on this machine (backfill past sessions into lesson cards, install the local encoder, switch recall on, optional private backup). Use when the user asks to set up, install, configure or finish installing lesson-recall.
+description: Set up MemBrain on this machine (backfill past sessions into lesson cards, install the local encoder, switch recall on, optional private backup). Use when the user asks to set up, install, configure or finish installing MemBrain.
 disable-model-invocation: true
 ---
 
-# Set up lesson recall
+# Set up MemBrain
 
 Read `${CLAUDE_PLUGIN_ROOT}/SETUP.md` in full, then follow it top to bottom.
 
 ## Tell the user this before you start
 
 Explain in your own words, in five or six lines, what is about to happen.
-Open with one sentence on what they installed: lesson-recall is the Claude Code
-plugin that implements MemBrain, a memory that decides at write time which
+Open with one sentence on what they installed: the Claude Code plugin for
+MemBrain, a memory that decides at write time which
 memories compete and stays silent unless one clearly fits.
 
 1. **A workflow analyses all of their past Claude Code sessions.** It reads every

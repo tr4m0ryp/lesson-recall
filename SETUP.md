@@ -1,4 +1,4 @@
-# Setting up lesson recall
+# Setting up MemBrain
 
 This file is written for the agent (Claude Code) that sets the plugin up in the
 user's session. Read the first section to explain the plugin to the user if
@@ -7,7 +7,7 @@ fails, stop and tell the user what failed.
 
 ## How it works, and why
 
-lesson-recall is the Claude Code plugin that implements **MemBrain**, an
+This repository is the Claude Code plugin for **MemBrain**, an
 approach to agent memory that decides at write time which memories compete and
 stays silent at read time unless one clearly fits. It implements the part of
 the MemBrain research that survived its measurements. The full explanation,
@@ -87,7 +87,7 @@ export CLAUDE_PLUGIN_ROOT="<plugin root>"
 ```
 
 Without the skill, find it with
-`ls -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/lesson-recall/lesson-recall/*/ | tail -1`.
+`ls -d "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"/plugins/cache/membrain/membrain/*/ | tail -1`.
 Below, `RECALL` stands for `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py"`; type it out in full.
 
 The plugin is **on from the moment it is installed**: the background pass writes
@@ -295,7 +295,7 @@ and confirm the repository URL with them. Later syncs run in the background.
 **To undo:**
 - **Stop injecting, keep learning:** `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" mode shadow`
 - **Stop everything:** `python3 "$CLAUDE_PLUGIN_ROOT/recall/cli.py" mode off`
-- **Uninstall:** `/plugin uninstall lesson-recall@lesson-recall`
+- **Uninstall:** `/plugin uninstall membrain@membrain`
 - **Delete the store** (cards, logs, encoder): `rm -rf "${RECALL_HOME:-$HOME/.local/share/claude-recall}"`
 - **Delete the backup:** the user deletes `<gh user>/claude-recall-cards` on GitHub themselves.
 

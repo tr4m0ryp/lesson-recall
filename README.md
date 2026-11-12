@@ -1,4 +1,8 @@
-# lesson-recall: MemBrain, long-term memory for Claude Code
+# MemBrain: long-term memory for Claude Code
+
+<p align="center">
+  <a href="https://x.com/tr4m0ryp"><img alt="Follow on X" src="https://img.shields.io/badge/X-@tr4m0ryp-000000?logo=x&logoColor=white"></a>
+</p>
 
 A Claude Code plugin that learns from your past sessions. When you correct the
 agent, it writes the lesson down as a small card. When a later prompt needs that
@@ -7,8 +11,8 @@ lesson, the card comes back. When nothing fits, it stays silent.
 A different approach to RAG: instead of trusting top-k similarity, it decides
 at write time which memories compete, and stays silent unless one clearly fits.
 
-The approach is called **MemBrain**, and lesson-recall is the Claude Code plugin
-that implements it. MemBrain is also the name of the research paper behind it
+The approach is called **MemBrain**, and this repository is the Claude Code
+plugin for MemBrain. MemBrain is also the name of the research paper behind it
 ("MemBrain: An Agent Memory Built on the Brain, and What the Measurements
 Said"); the plugin implements the part of MemBrain that survived those
 measurements.
@@ -415,9 +419,9 @@ and lets the reading model choose.
 ## Install
 
 ```
-/plugin marketplace add tr4m0ryp/lesson-recall
-/plugin install lesson-recall@lesson-recall
-/lesson-recall:setup
+/plugin marketplace add tr4m0ryp/membrain-claude-plugin
+/plugin install membrain@membrain
+/membrain:setup
 ```
 
 The third command has Claude Code walk you through [SETUP.md](./SETUP.md): adapt
@@ -501,10 +505,10 @@ at the end of [SETUP.md](./SETUP.md).
 
 ## License
 
-lesson-recall is **source-available**, licensed under the [PolyForm
+The MemBrain Claude Code plugin is **source-available**, licensed under the [PolyForm
 Noncommercial License 1.0.0](./LICENSE), **not** an OSI open-source license.
 
-- **You may** use, modify, fork, and share lesson-recall freely for any **noncommercial** purpose, as long as you keep the copyright and `Required Notice:` lines (see [`NOTICE`](./NOTICE)) and credit *"lesson-recall by Keygraph, Inc."*
+- **You may** use, modify, fork, and share it freely for any **noncommercial** purpose, as long as you keep the copyright and `Required Notice:` lines (see [`NOTICE`](./NOTICE)) and credit *"MemBrain Claude Code plugin by Keygraph, Inc."*
 - **You may not** sell it, bundle it into a paid product, or run it as a paid/hosted service **without a commercial license**.
 
 Copyright (c) 2026 Keygraph, Inc. Commercial licensing enquiries: see
