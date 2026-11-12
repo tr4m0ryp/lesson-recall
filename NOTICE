@@ -33,7 +33,20 @@ https://github.com/tr4m0ryp/membrain-claude-plugin/issues and a maintainer will 
 
 THIRD-PARTY MATERIAL
 
-Nothing third-party is redistributed in this repository. The optional encoder
+The header image (docs/figures/header/hippocampus-light.png and
+hippocampus-dark.png) is cropped, cleaned and recoloured from:
+  Title:   Drawing of the neural circuitry of the rodent hippocampus
+  Author:  Santiago Ramon y Cajal (1852-1934)
+  Year:    1911, Histologie du Systeme Nerveux de l'Homme et des Vertebres,
+           A. Maloine, Paris
+  Source:  https://commons.wikimedia.org/wiki/File:CajalHippocampus.jpeg
+  Licence: public domain. The Commons page states: "This work is in the public
+           domain in its country of origin and other countries and areas where
+           the copyright term is the author's life plus 70 years or fewer." It
+           was published in 1911, before 1929, so it is also in the public
+           domain in the United States.
+
+No other third-party material is redistributed in this repository. The optional encoder
 step downloads, at install time and into the user's local store, the Python
 packages onnxruntime, tokenizers and numpy from PyPI, and the bge-small-en-v1.5
 ONNX model files from Hugging Face, each under its own licence. The model files
