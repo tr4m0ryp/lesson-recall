@@ -10,7 +10,10 @@ Read `${CLAUDE_PLUGIN_ROOT}/SETUP.md` in full, then follow it top to bottom.
 
 ## Tell the user this before you start
 
-Explain in your own words, in five or six lines, what is about to happen:
+Explain in your own words, in five or six lines, what is about to happen.
+Open with one sentence on what they installed: lesson-recall is the Claude Code
+plugin that implements MemBrain, a memory that decides at write time which
+memories compete and stays silent unless one clearly fits.
 
 1. **A workflow analyses all of their past Claude Code sessions.** It reads every
    transcript under their Claude config folder. Nothing is sent anywhere at this stage.

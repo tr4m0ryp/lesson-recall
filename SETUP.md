@@ -7,7 +7,11 @@ fails, stop and tell the user what failed.
 
 ## How it works, and why
 
-The full explanation, with the math and the plots, is in the README section
+lesson-recall is the Claude Code plugin that implements **MemBrain**, an
+approach to agent memory that decides at write time which memories compete and
+stays silent at read time unless one clearly fits. It implements the part of
+the MemBrain research that survived its measurements. The full explanation,
+with the math and the plots, is in the README section
 [How it works, and why](./README.md#how-it-works-and-why). Read it there if the
 user wants depth. The short version, for explaining it in a few sentences:
 
@@ -15,7 +19,8 @@ user wants depth. The short version, for explaining it in a few sentences:
   On a synthetic benchmark the right memory is in the top 10 every time
   (recall 1.0000 at k=10) but ranked first only 0.6194 of the time, at every k.
   The loss is competition between lookalike memories, so the fix belongs in the
-  write path. This was measured on a synthetic corpus, not on real sessions.
+  write path, which is where MemBrain works. This was measured on a synthetic
+  corpus, not on real sessions.
 - **Lessons, not transcripts.** One Haiku call per unit writes at most 2 cards;
   a card is dropped unless its quote is found verbatim (8 of 478 dropped, 1.7%).
 - **A write decision for lookalikes.** A new card meets its up to 5 nearest
@@ -24,7 +29,7 @@ user wants depth. The short version, for explaining it in a few sentences:
 - **Supersession needs a second confirming call.** On real sessions both
   proposed supersessions failed it: zero cards retired.
 - **Recall by cue and scope, silent by default.** BM25 (trigger and referent
-  count twice) shortlists 3 in-scope cards; a local encoder gate shows a card
+  count twice) shortlists 3 in-scope cards; the MemBrain gate (a local encoder) shows a card
   only above a threshold fitted so that a share 0.33 of the user's own past
   prompts would fire. Top card relevant in 0.701 of fires against 0.510 for a
   BM25-only gate (320 real prompts, labels by Haiku, gate
