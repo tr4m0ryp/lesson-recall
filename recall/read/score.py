@@ -5,30 +5,15 @@ time, and BM25 no worse than a small dense encoder at top-1. The picking is left
 model that reads the injected cards.
 """
 import math
-import re
 
-STOP = set("""a an the and or but if then else of to in on at by for with from into over under as is are was
-were be been being it its this that these those i you he she we they me my your our their not no do does did
-done have has had can could should would will shall may might must just also so than too very there here what
-which who whom when where why how all any some each other more most such only own same s t now please make
-use using get got want need like let one two also about up out off again still de het een en of maar als dan
-van naar in op bij voor met uit over is zijn was waren ben bent het dit dat deze die ik jij je u hij zij we
-wij ze mijn jouw niet geen wel ook nog al om te er hier daar wat wie waar hoe kan kun moet moeten wil zou
-hebben heb heeft had doe doen gedaan maak maken even graag""".split())
-_TOKEN = re.compile(r"[a-z0-9_]+")
+from ..core.text import stem, stopwords, words
+
 K1, B = 1.2, 0.75
 
 
-def _stem(tok):
-    if len(tok) > 4:
-        for suffix in ("ing", "es", "ed", "s"):
-            if tok.endswith(suffix) and len(tok) - len(suffix) >= 3:
-                return tok[: -len(suffix)]
-    return tok
-
-
 def tokens(text):
-    return [_stem(t) for t in _TOKEN.findall(text.lower()) if len(t) > 1 and t not in STOP]
+    stop = stopwords()
+    return [stem(t) for t in words(text) if len(t) > 1 and t not in stop]
 
 
 def card_tokens(card):

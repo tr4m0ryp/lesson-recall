@@ -51,6 +51,19 @@ def fit_dense(rows, cfg, rate):
     return {"dense_pre": round(ok[-1][0], 2), "dense_gate": round(best[cut], 4)}
 
 
+def fit_links(cards, share):
+    """link_score such that `share` of the stored differs_from links clear it, or None without links.
+
+    The link score is a raw BM25 score, whose scale grows with the store, so a fixed value would
+    carry the author's store into every other one.
+    """
+    scores = sorted((k["score"] for c in store.active(cards) for k in c.get("links", [])
+                     if k.get("differs_from") and k.get("condition") and "score" in k), reverse=True)
+    if not scores:
+        return None
+    return round(scores[min(len(scores) - 1, max(0, int(share * len(scores)) - 1))], 3)
+
+
 def calibrate(rate=None):
     """Set gate_score so that `rate` of historical prompts fire, and record the pool size.
 
@@ -69,13 +82,16 @@ def calibrate(rate=None):
     score = round(ok[cut], 2)
     out = {"at": int(time.time()), "prompts": len(rows), "rate": rate, "gate_score": score,
            "cards": len(store.active(cards)), "was": cfg["gate_score"]}
+    link = fit_links(cards, cfg["link_share"])
+    if link is not None:
+        out["link_score"] = link
     if cfg["dense"]:
         try:
             out.update(fit_dense([(s, m, t, h[: cfg["inject_k"]]) for s, m, t, h in rows], cfg, rate) or {})
         except dense.Unavailable as e:
             out["dense_error"] = str(e)[:200]
     paths.set_config(gate_rate=rate, gate_cards=len(store.active(cards)),
-                     **{k: out[k] for k in ("gate_score", "dense_pre", "dense_gate") if k in out})
+                     **{k: out[k] for k in ("gate_score", "dense_pre", "dense_gate", "link_score") if k in out})
     paths.log("calibrate", out)
     return out
 

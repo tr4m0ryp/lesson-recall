@@ -4,30 +4,39 @@ Surprise episodes come first. The stretches between them are tiled with calm chu
 a control run found a lesson in calm spans as often as in flagged ones (32 of 60 against 149
 of 281). The detector therefore decides where to cut, not what to read.
 
-A surprise event is a user correction, an interrupt, or a burst of tool errors. The regex is
-only a candidate generator: the extractor may still answer that an episode holds no lesson.
+A surprise event is a user correction, an interrupt, or a burst of tool errors. The correction
+cues come from the config (`correction_cues`, English and Dutch by default) and are only a
+candidate generator: the extractor may still answer that an episode holds no lesson.
 An episode runs from the request before its first event to the first calm user turn after
 its last event. Until that calm turn exists the episode is open and no card is written.
 Two events share an episode only when the second arrives before the first has closed, so a
 parse that starts at any calm user turn cuts the same episodes as a parse of the whole file.
 """
+import functools
 import hashlib
 import re
 
-CORR = re.compile(
-    r"\b(no[,. ]|not what|wrong|stop|don'?t|instead|again|still (broken|not|fail)|revert|undo|"
-    r"why did you|you (forgot|missed|broke)|nee[,. ]|niet|fout|verkeerd|opnieuw|terug)\b", re.I)
+from ..core import paths, text
+
 CLIP = {"user": 1500, "assistant": 700, "tool": 200, "result": 300, "interrupt": 40}
 BURST, SPAN = 3, 6   # BURST failed tool results within the last SPAN results
 CALM_STEPS, CALM_TURNS = 3, 120   # a calm chunk closes after this many requests or turns
 
 
-def events(turns):
+@functools.lru_cache(maxsize=8)
+def cue_pattern(cues):
+    """One regex over the cues: whole words, except cues in a script written without spaces."""
+    parts = [f"(?:{c})" if text.has_nospace(c) else rf"\b(?:{c})\b" for c in cues]
+    return re.compile("|".join(parts) or r"(?!)", re.I)
+
+
+def events(turns, cues=None):
     """Indices of surprise turns, with their kind."""
+    corr = cue_pattern(tuple(paths.config()["correction_cues"] if cues is None else cues))
     found, recent, seen_user, quiet_until = [], [], False, -1
     for i, t in enumerate(turns):
         if t["kind"] == "user":
-            if seen_user and CORR.search(t["text"][:400]):
+            if seen_user and corr.search(t["text"][:400]):
                 found.append((i, "correction"))
             seen_user = True
         elif t["kind"] == "interrupt":

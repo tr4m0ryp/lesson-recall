@@ -24,6 +24,7 @@ EVENTS = os.path.join(HOME, "events.jsonl")        # append-only card operations
 PAIRS = os.path.join(HOME, "pairs.jsonl")          # every judged card pair
 WATERMARKS = os.path.join(HOME, "watermarks.json")
 CONFIG = os.path.join(HOME, "config.json")
+STOPWORDS = os.path.join(HOME, "stopwords.json")    # learned from this user's prompts by `cli.py tune`
 CACHE = os.path.join(HOME, "cache")                # one extraction result per episode
 LOGS = os.path.join(HOME, "log")
 RUN = os.path.join(HOME, "run")                    # working directory of headless calls
@@ -33,17 +34,30 @@ SYNC = os.path.join(HOME, "sync")                  # clone of the card repositor
 
 DEFAULTS = {
     "mode": "on",              # off | shadow | on
-    "gate_score": 10.5,        # minimum BM25 score: for the prompt to fire, and for each card
+    # Thresholds marked "fallback" were fitted on the author's sessions; `calibrate` refits them
+    # on this user's replayed prompts and they are never used after that.
+    "gate_score": 10.5,        # fallback. Minimum BM25 score: for the prompt to fire, and for each card
     "gate_rate": 0.33,         # share of past prompts that should fire; calibrate fits gate_score to it
     "gate_cards": 0,           # active cards when gate_score was last fitted (0: never)
     "gate_growth": 1.15,       # refit once the pool has grown by this factor
     "gate_terms": 2,           # minimum distinct query terms the best card must match
     "dense": False,            # second stage: a local encoder reranks the BM25 shortlist (cli.py dense install)
     "dense_pass": 0.70,        # share of past prompts the BM25 pre-gate lets through to the encoder
-    "dense_pre": 8.0,          # BM25 score of the best card for the encoder to run; fitted to dense_pass
-    "dense_gate": 0.68,        # minimum prompt-to-card cosine: for the prompt to fire, and for each card
+    "dense_pre": 8.0,          # fallback. BM25 score of the best card for the encoder to run; fitted to dense_pass
+    "dense_gate": 0.68,        # fallback. Minimum prompt-to-card cosine: for the prompt to fire, and for each card
     "inject_k": 3,
-    "link_score": 25,          # a differs_from link is shown only for pairs at least this close
+    "link_score": 25,          # fallback. A differs_from link is shown only for pairs at least this close
+    "link_share": 0.5,         # calibrate sets link_score so that this share of stored links is shown
+    "stop_df": 0.10,           # tune: a term in at least this share of the user's prompts is a stop word
+    "stop_max": 150,           # tune: at most this many learned stop words, most frequent first
+    "stop_min_prompts": 100,   # tune: fewer prompts than this keep the built-in English and Dutch list
+    "card_language": "English",   # language Haiku writes referent, lesson and trigger in
+    # Regular expressions that mark a user turn as a correction, matched in the first 400 characters,
+    # case-insensitive, as whole words (cues in scripts without spaces match anywhere). They only
+    # decide where a session is cut; every stretch is read either way. English and Dutch by default.
+    "correction_cues": [r"no[,. ]", "not what", "wrong", "stop", "don'?t", "instead", "again",
+                        "still (broken|not|fail)", "revert", "undo", "why did you", "you (forgot|missed|broke)",
+                        r"nee[,. ]", "niet", "fout", "verkeerd", "opnieuw", "terug"],
     "min_prompt_chars": 24,
     "window_chars": 14000,
     "pass_interval_s": 120,    # per-session spacing of background passes

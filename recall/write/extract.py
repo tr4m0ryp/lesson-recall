@@ -37,7 +37,7 @@ Each card has:
 "turn": the [n] label of the turn that is the best evidence
 "quote": at most 200 characters copied exactly from that turn
 
-Write referent, lesson and trigger in English. Leave the quote in its original language. Never include
+Write referent, lesson and trigger in {language}. Leave the quote in its original language. Never include
 a credential."""
 
 FIELDS = ("referent", "lesson", "trigger")
@@ -88,7 +88,8 @@ def extract(turns, ep, sid, project, cfg):
               f"<excerpt>\n{window}\n</excerpt>")
     refused = False
     try:
-        reply, cost = llm.ask(SYSTEM, prompt) if len(window) >= MIN_WINDOW else ({}, 0.0)
+        system = SYSTEM.replace("{language}", cfg["card_language"])
+        reply, cost = llm.ask(system, prompt) if len(window) >= MIN_WINDOW else ({}, 0.0)
     except llm.Refused:   # permanent: record the episode as read, with no card
         reply, cost, refused = {}, 0.0, True
     proposed = reply.get("cards") if isinstance(reply.get("cards"), list) else []
