@@ -4,6 +4,15 @@
   <a href="https://x.com/tr4m0ryp"><img alt="Follow on X" src="https://img.shields.io/badge/X-@tr4m0ryp-000000?logo=x&logoColor=white"></a>
 </p>
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/figures/header/hippocampus-dark.png">
+    <img alt="Santiago Ramon y Cajal's 1911 ink drawing of the hippocampal circuit, showing neurons of the dentate gyrus and the CA3 and CA1 fields linked by their fibre pathways" src="docs/figures/header/hippocampus-light.png" width="420">
+  </picture>
+</p>
+
+<p align="center"><sub>The hippocampal circuit (dentate gyrus, CA3, CA1) that MemBrain takes its ideas from. Santiago Ramon y Cajal, 1911, public domain.</sub></p>
+
 A Claude Code plugin that learns from your past sessions. When you correct the
 agent, it writes the lesson down as a small card. When a later prompt needs that
 lesson, the card comes back. When nothing fits, it stays silent.
@@ -510,6 +519,10 @@ Noncommercial License 1.0.0](./LICENSE), **not** an OSI open-source license.
 
 - **You may** use, modify, fork, and share it freely for any **noncommercial** purpose, as long as you keep the copyright and `Required Notice:` lines (see [`NOTICE`](./NOTICE)) and credit *"MemBrain Claude Code plugin by Keygraph, Inc."*
 - **You may not** sell it, bundle it into a paid product, or run it as a paid/hosted service **without a commercial license**.
+
+Credits: header drawing by Santiago Ramon y Cajal (1911), public domain, via
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:CajalHippocampus.jpeg);
+full attribution in [`NOTICE`](./NOTICE).
 
 Copyright (c) 2026 Keygraph, Inc. Commercial licensing enquiries: see
 [`NOTICE`](./NOTICE).
