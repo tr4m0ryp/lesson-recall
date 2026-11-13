@@ -5,6 +5,6 @@
   "author": {"name": "Keygraph, Inc."},
   "homepage": "https://github.com/tr4m0ryp/membrain-claude-plugin",
   "repository": "https://github.com/tr4m0ryp/membrain-claude-plugin",
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "Apache-2.0",
   "keywords": ["memory", "hooks", "recall", "lessons", "rag"]
 }

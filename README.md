@@ -526,15 +526,16 @@ at the end of [SETUP.md](./SETUP.md).
 
 ## License
 
-The MemBrain Claude Code plugin is **source-available**, licensed under the [PolyForm
-Noncommercial License 1.0.0](./LICENSE), **not** an OSI open-source license.
+Licensed under the [Apache License 2.0](./LICENSE). Commercial use, modification
+and distribution are allowed. Keep the copyright notice and the
+[`NOTICE`](./NOTICE) file when you redistribute. See [`LICENSE`](./LICENSE) and
+[`NOTICE`](./NOTICE) for the full terms.
 
-- **You may** use, modify, fork, and share it freely for any **noncommercial** purpose, as long as you keep the copyright and `Required Notice:` lines (see [`NOTICE`](./NOTICE)) and credit *"MemBrain Claude Code plugin by Keygraph, Inc."*
-- **You may not** sell it, bundle it into a paid product, or run it as a paid/hosted service **without a commercial license**.
-
-Credits: header drawing by Santiago Ramon y Cajal (1911), public domain, via
-[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:CajalHippocampus.jpeg);
-full attribution in [`NOTICE`](./NOTICE).
-
-Copyright (c) 2026 Keygraph, Inc. Commercial licensing enquiries: see
+Third-party material keeps its own terms: the header drawing by Santiago Ramon y
+Cajal (1911) is public domain, via
+[Wikimedia Commons](https://commons.wikimedia.org/wiki/File:CajalHippocampus.jpeg),
+and the encoder model downloaded at setup (bge-small-en-v1.5, ONNX port from
+Hugging Face, MIT on its model card) is under its own licence. Details are in
 [`NOTICE`](./NOTICE).
+
+Copyright (c) 2026 Keygraph, Inc.
